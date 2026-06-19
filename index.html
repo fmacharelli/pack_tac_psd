@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório Gerencial — PACK TAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Spline+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1F4; --surface:#FFFFFF; --surface-2:#F7F9FB;
+    --border:#DCE2E8; --border-strong:#C6CFD8;
+    --ink:#14253B; --muted:#5B6B7E; --faint:#8A97A6;
+    --series:#0E7C7B; --series-soft:rgba(14,124,123,.12);
+    --ma:#E0992F; --trend:#C0436A;
+    --grid:#EDF1F5; --focus:#0E7C7B;
+    --radius:14px; --shadow:0 1px 2px rgba(20,37,59,.04),0 8px 24px rgba(20,37,59,.06);
+    --ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --display:'Spline Sans','Inter',-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--ui); background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased; line-height:1.45;
+    font-feature-settings:"tnum" 1,"cv05" 1;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 56px}
+  /* header */
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--series);font-weight:600;margin:0 0 6px}
+  h1{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:-.01em;margin:0;line-height:1.1}
+  .head p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .range-tag{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--border);
+    padding:8px 14px;border-radius:999px;white-space:nowrap}
+  .range-tag b{color:var(--ink);font-weight:600}
+  .head-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .src{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+  .src b{color:var(--ink);font-weight:600}
+  .src-dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .src-dot.live{background:#1FA971} .src-dot.local{background:var(--ma)}
+  .src-dot.loading{background:var(--faint);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  .refresh{appearance:none;font-family:var(--ui);font-size:12px;font-weight:600;color:var(--series);
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;padding:6px 12px;cursor:pointer;transition:.14s}
+  .refresh:hover:not(:disabled){border-color:var(--series);background:var(--series-soft)}
+  .refresh:disabled{opacity:.5;cursor:default}
+  /* kpi */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 16px 14px;cursor:pointer;text-align:left;position:relative;transition:.16s ease;
+    box-shadow:var(--shadow);overflow:hidden}
+  .kpi:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+  .kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .kpi.active{border-color:var(--series);box-shadow:0 0 0 1px var(--series),var(--shadow)}
+  .kpi.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--series)}
+  .kpi .lab{font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.3;min-height:30px}
+  .kpi .val{font-family:var(--display);font-weight:700;font-size:23px;letter-spacing:-.02em;margin-top:8px}
+  .kpi .sub{font-size:11.5px;color:var(--faint);margin-top:3px}
+  /* controls */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .controls{padding:16px 18px;display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+  .ctl-row{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field>label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .segs{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px;flex-wrap:wrap;gap:2px}
+  .seg{appearance:none;border:0;background:transparent;font-family:var(--ui);font-size:13px;font-weight:500;
+    color:var(--muted);padding:7px 13px;border-radius:7px;cursor:pointer;transition:.13s}
+  .seg:hover{color:var(--ink)}
+  .seg.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,37,59,.12);font-weight:600}
+  select,input[type=date],input[type=month]{font-family:var(--ui);font-size:13.5px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;padding:8px 11px;cursor:pointer}
+  select:focus,input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+  .date-extra{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .date-extra .dash{color:var(--faint)}
+  .hidden{display:none !important}
+  .toggles{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+  .tg{display:inline-flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:10px;padding:8px 13px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:.14s;user-select:none}
+  .tg:hover{border-color:var(--border-strong)}
+  .tg .dot{width:18px;height:10px;border-radius:3px;background:var(--border-strong);transition:.14s;flex:none}
+  .tg.on{color:var(--ink);border-color:currentColor}
+  .tg.ma.on{color:var(--ma)} .tg.ma.on .dot{background:var(--ma)}
+  .tg.tr.on{color:var(--trend)} .tg.tr.on .dot{background:var(--trend)}
+  .tg .swatch{width:16px;height:0;border-top:3px solid currentColor;flex:none}
+  .tg.tr .swatch{border-top-style:dashed}
+  /* chart */
+  .chart-card{padding:18px 18px 16px}
+  .chart-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .chart-top h2{font-family:var(--display);font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .chart-top .unit{font-size:12px;color:var(--faint)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:16px;height:0;border-top:3px solid;display:inline-block}
+  .legend i.s{border-color:var(--series)} .legend i.m{border-color:var(--ma)}
+  .legend i.t{border-color:var(--trend);border-top-style:dashed}
+  .chart-host{position:relative;width:100%}
+  svg.chart{display:block;width:100%;height:auto;touch-action:none}
+  .tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--border-strong);
+    border-radius:10px;padding:9px 11px;font-size:12.5px;box-shadow:0 6px 18px rgba(20,37,59,.14);
+    transform:translate(-50%,-115%);white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5}
+  .tip .td{font-weight:600;color:var(--ink);margin-bottom:5px}
+  .tip .tr{display:flex;align-items:center;gap:7px;color:var(--muted)}
+  .tip .tr b{color:var(--ink);font-weight:600;margin-left:auto;padding-left:14px}
+  .tip .sw{width:10px;height:10px;border-radius:3px;flex:none}
+  .empty{padding:60px 20px;text-align:center;color:var(--faint);font-size:14px}
+  /* stats footer */
+  .stats{display:flex;gap:26px;flex-wrap:wrap;border-top:1px solid var(--border);margin-top:14px;padding-top:14px}
+  .stat .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .stat .v{font-family:var(--display);font-weight:600;font-size:16px;margin-top:3px}
+  .stat .v.up{color:var(--series)} .stat .v.down{color:var(--trend)}
+  .foot{margin-top:22px;font-size:12px;color:var(--faint);text-align:center}
+  @media(max-width:920px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .toggles{margin-left:0;width:100%}
+  }
+  @media(max-width:560px){
+    .wrap{padding:18px 14px 40px}
+    h1{font-size:23px}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Relatório Gerencial</p>
+      <h1>PACK TAC · Acompanhamento Diário</h1>
+      <p>Agendamentos, avaliações e comparecimento — série diária.</p>
+    </div>
+    <div class="head-right">
+      <div class="range-tag" id="rangeTag"></div>
+      <div class="src">
+        <span class="src-dot loading" id="srcDot"></span>
+        <span id="srcText">Conectando à planilha…</span>
+        <button class="refresh" id="btnRefresh">Atualizar dados</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="panel controls">
+    <div class="ctl-row">
+      <div class="field" style="flex:1 1 auto">
+        <label>Indicador no gráfico</label>
+        <div class="segs" id="metricSegs"></div>
+      </div>
+    </div>
+    <div class="ctl-row">
+      <div class="field">
+        <label>Período</label>
+        <select id="dateMode">
+          <option value="total">Período total</option>
+          <option value="last30">Últimos 30 dias</option>
+          <option value="last60">Últimos 60 dias</option>
+          <option value="last90">Últimos 90 dias</option>
+          <option value="last180">Últimos 180 dias</option>
+          <option value="year">Ano específico</option>
+          <option value="month">Mês específico</option>
+          <option value="range">Período específico</option>
+        </select>
+      </div>
+      <div class="field date-extra hidden" id="rangeFields">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:600">De</label>
+          <input type="date" id="dFrom">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Até</label>
+          <input type="date" id="dTo">
+        </div>
+      </div>
+      <div class="field hidden" id="monthField">
+        <label>Mês</label>
+        <input type="month" id="dMonth">
+      </div>
+      <div class="field hidden" id="yearField">
+        <label>Ano</label>
+        <select id="dYear"></select>
+      </div>
+      <div class="toggles">
+        <label class="tg ma" id="tgMA"><span class="swatch"></span> Média móvel 10d</label>
+        <label class="tg tr" id="tgTR"><span class="swatch"></span> Tendência (regressão)</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel chart-card">
+    <div class="chart-top">
+      <div>
+        <h2 id="chartTitle"></h2>
+        <span class="unit" id="chartUnit"></span>
+      </div>
+      <div class="legend">
+        <span><i class="s"></i> Série diária</span>
+        <span id="lgMA" class="hidden"><i class="m"></i> Média móvel 10d</span>
+        <span id="lgTR" class="hidden"><i class="t"></i> Tendência</span>
+      </div>
+    </div>
+    <div class="chart-host" id="host">
+      <svg class="chart" id="svg" viewBox="0 0 960 420" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="tip" id="tip"></div>
+      <div class="empty hidden" id="empty">Sem dados no período selecionado.</div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <p class="foot">Fonte: Relatório Gerencial V2 — PACK TAC · aba “#AGEND, #AVAL. &amp; % COMP. TOT”. Dias sem operação são exibidos como lacuna.</p>
+</div>
+
+<script>
+const SNAPSHOT = [{"d":"2024-01-01","aval":0.0,"agTot":2.0,"agFeito":180,"cTot":0,"cVal":null},{"d":"2024-01-02","aval":387.0,"agTot":2028.0,"agFeito":2150,"cTot":0.1908284024,"cVal":0.254},{"d":"2024-01-03","aval":500.0,"agTot":2218.0,"agFeito":2459,"cTot":0.2254283138,"cVal":0.319},{"d":"2024-01-04","aval":511.0,"agTot":2126.0,"agFeito":2361,"cTot":0.2403574788,"cVal":0.374},{"d":"2024-01-05","aval":525.0,"agTot":2256.0,"agFeito":2159,"cTot":0.232712766,"cVal":0.352},{"d":"2024-01-06","aval":451.0,"agTot":2008.0,"agFeito":250,"cTot":0.2246015936,"cVal":0.349},{"d":"2024-01-07","aval":0.0,"agTot":0.0,"agFeito":199,"cTot":null,"cVal":null},{"d":"2024-01-08","aval":214.0,"agTot":920.0,"agFeito":2347,"cTot":0.2326086957,"cVal":0.313},{"d":"2024-01-09","aval":583.0,"agTot":2524.0,"agFeito":2166,"cTot":0.2309825674,"cVal":0.375},{"d":"2024-01-10","aval":553.0,"agTot":2218.0,"agFeito":2184,"cTot":0.2493237151,"cVal":0.388},{"d":"2024-01-11","aval":522.0,"agTot":2099.0,"agFeito":2201,"cTot":0.2486898523,"cVal":0.379},{"d":"2024-01-12","aval":541.0,"agTot":2092.0,"agFeito":2072,"cTot":0.2586042065,"cVal":0.396},{"d":"2024-01-13","aval":449.0,"agTot":2076.0,"agFeito":664,"cTot":0.2162813102,"cVal":0.34},{"d":"2024-01-14","aval":0.0,"agTot":0.0,"agFeito":212,"cTot":null,"cVal":null},{"d":"2024-01-15","aval":197.0,"agTot":1012.0,"agFeito":2283,"cTot":0.1946640316,"cVal":0.271},{"d":"2024-01-16","aval":558.0,"agTot":2336.0,"agFeito":2290,"cTot":0.238869863,"cVal":0.342},{"d":"2024-01-17","aval":557.0,"agTot":2176.0,"agFeito":2238,"cTot":0.2559742647,"cVal":0.392},{"d":"2024-01-18","aval":523.0,"agTot":2006.0,"agFeito":2238,"cTot":0.2607178465,"cVal":0.375},{"d":"2024-01-19","aval":496.0,"agTot":1991.0,"agFeito":2358,"cTot":0.2491210447,"cVal":0.391},{"d":"2024-01-20","aval":395.0,"agTot":2014.0,"agFeito":649,"cTot":0.1961271102,"cVal":0.302},{"d":"2024-01-21","aval":0.0,"agTot":0.0,"agFeito":245,"cTot":null,"cVal":null},{"d":"2024-01-22","aval":232.0,"agTot":1114.0,"agFeito":2304,"cTot":0.2082585278,"cVal":0.282},{"d":"2024-01-23","aval":516.0,"agTot":2497.0,"agFeito":2383,"cTot":0.2066479776,"cVal":0.313},{"d":"2024-01-24","aval":512.0,"agTot":2245.0,"agFeito":2359,"cTot":0.2280623608,"cVal":0.344},{"d":"2024-01-25","aval":447.0,"agTot":1813.0,"agFeito":1511,"cTot":0.2465526751,"cVal":0.384},{"d":"2024-01-26","aval":487.0,"agTot":2057.0,"agFeito":2265,"cTot":0.2367525523,"cVal":0.353},{"d":"2024-01-27","aval":383.0,"agTot":2081.0,"agFeito":705,"cTot":0.1840461317,"cVal":0.288},{"d":"2024-01-28","aval":0.0,"agTot":0.0,"agFeito":160,"cTot":null,"cVal":null},{"d":"2024-01-29","aval":238.0,"agTot":1150.0,"agFeito":2387,"cTot":0.2069565217,"cVal":0.295},{"d":"2024-01-30","aval":573.0,"agTot":2477.0,"agFeito":2368,"cTot":0.2313282196,"cVal":0.353},{"d":"2024-01-31","aval":522.0,"agTot":2287.0,"agFeito":2225,"cTot":0.2282466113,"cVal":0.356},{"d":"2024-02-01","aval":454.0,"agTot":1972.0,"agFeito":2179,"cTot":0.2302231237,"cVal":0.38},{"d":"2024-02-02","aval":443.0,"agTot":2008.0,"agFeito":2123,"cTot":0.2206175299,"cVal":0.361},{"d":"2024-02-03","aval":417.0,"agTot":2332.0,"agFeito":762,"cTot":0.1788164666,"cVal":0.29},{"d":"2024-02-04","aval":0.0,"agTot":0.0,"agFeito":239,"cTot":null,"cVal":null},{"d":"2024-02-05","aval":363.0,"agTot":1993.0,"agFeito":2544,"cTot":0.1821374812,"cVal":0.273},{"d":"2024-02-06","aval":518.0,"agTot":2392.0,"agFeito":2382,"cTot":0.2165551839,"cVal":0.355},{"d":"2024-02-07","aval":485.0,"agTot":2358.0,"agFeito":2291,"cTot":0.205682782,"cVal":0.347},{"d":"2024-02-08","aval":463.0,"agTot":2170.0,"agFeito":2039,"cTot":0.2133640553,"cVal":0.346},{"d":"2024-02-09","aval":462.0,"agTot":2566.0,"agFeito":1724,"cTot":0.1800467654,"cVal":0.304},{"d":"2024-02-10","aval":0.0,"agTot":24.0,"agFeito":206,"cTot":0,"cVal":null},{"d":"2024-02-11","aval":0.0,"agTot":0.0,"agFeito":171,"cTot":null,"cVal":null},{"d":"2024-02-12","aval":0.0,"agTot":2.0,"agFeito":252,"cTot":0,"cVal":null},{"d":"2024-02-13","aval":0.0,"agTot":4.0,"agFeito":724,"cTot":0,"cVal":null},{"d":"2024-02-14","aval":270.0,"agTot":1673.0,"agFeito":2744,"cTot":0.1613867304,"cVal":0.257},{"d":"2024-02-15","aval":399.0,"agTot":2196.0,"agFeito":2679,"cTot":0.1816939891,"cVal":0.342},{"d":"2024-02-16","aval":489.0,"agTot":2418.0,"agFeito":2279,"cTot":0.2022332506,"cVal":0.359},{"d":"2024-02-17","aval":499.0,"agTot":2419.0,"agFeito":820,"cTot":0.2062835883,"cVal":0.344},{"d":"2024-02-18","aval":0.0,"agTot":0.0,"agFeito":239,"cTot":null,"cVal":null},{"d":"2024-02-19","aval":412.0,"agTot":2133.0,"agFeito":2728,"cTot":0.1931551805,"cVal":0.318},{"d":"2024-02-20","aval":509.0,"agTot":2394.0,"agFeito":2698,"cTot":0.2126148705,"cVal":0.37},{"d":"2024-02-21","aval":493.0,"agTot":2273.0,"agFeito":2570,"cTot":0.2168939727,"cVal":0.37},{"d":"2024-02-22","aval":447.0,"agTot":2090.0,"agFeito":2422,"cTot":0.2138755981,"cVal":0.369},{"d":"2024-02-23","aval":491.0,"agTot":2273.0,"agFeito":2125,"cTot":0.2160140783,"cVal":0.374},{"d":"2024-02-24","aval":440.0,"agTot":2342.0,"agFeito":754,"cTot":0.1878736123,"cVal":0.315},{"d":"2024-02-25","aval":0.0,"agTot":0.0,"agFeito":143,"cTot":null,"cVal":null},{"d":"2024-02-26","aval":381.0,"agTot":1610.0,"agFeito":2657,"cTot":0.2366459627,"cVal":0.38},{"d":"2024-02-27","aval":530.0,"agTot":2332.0,"agFeito":2431,"cTot":0.2272727273,"cVal":0.388},{"d":"2024-02-28","aval":528.0,"agTot":2142.0,"agFeito":2248,"cTot":0.2464985994,"cVal":0.421},{"d":"2024-02-29","aval":419.0,"agTot":1957.0,"agFeito":2248,"cTot":0.2141032192,"cVal":0.367},{"d":"2024-03-01","aval":488.0,"agTot":2174.0,"agFeito":2112,"cTot":0.2244710212,"cVal":0.407},{"d":"2024-03-02","aval":449.0,"agTot":2462.0,"agFeito":923,"cTot":0.1823720552,"cVal":0.283},{"d":"2024-03-03","aval":0.0,"agTot":0.0,"agFeito":126,"cTot":null,"cVal":null},{"d":"2024-03-04","aval":184.0,"agTot":1156.0,"agFeito":2708,"cTot":0.1591695502,"cVal":0.262},{"d":"2024-03-05","aval":538.0,"agTot":2447.0,"agFeito":2295,"cTot":0.2198610544,"cVal":0.373},{"d":"2024-03-06","aval":520.0,"agTot":2287.0,"agFeito":2243,"cTot":0.2273721032,"cVal":0.376},{"d":"2024-03-07","aval":445.0,"agTot":2063.0,"agFeito":2166,"cTot":0.2157052836,"cVal":0.371},{"d":"2024-03-08","aval":461.0,"agTot":2212.0,"agFeito":1958,"cTot":0.2084086799,"cVal":0.358},{"d":"2024-03-09","aval":386.0,"agTot":2352.0,"agFeito":564,"cTot":0.1641156463,"cVal":0.275},{"d":"2024-03-10","aval":0.0,"agTot":0.0,"agFeito":128,"cTot":null,"cVal":null},{"d":"2024-03-11","aval":264.0,"agTot":1294.0,"agFeito":2444,"cTot":0.2040185471,"cVal":0.334},{"d":"2024-03-12","aval":497.0,"agTot":2362.0,"agFeito":2183,"cTot":0.2104149026,"cVal":0.351},{"d":"2024-03-13","aval":506.0,"agTot":2210.0,"agFeito":2147,"cTot":0.228959276,"cVal":0.375},{"d":"2024-03-14","aval":487.0,"agTot":2005.0,"agFeito":2067,"cTot":0.2428927681,"cVal":0.406},{"d":"2024-03-15","aval":464.0,"agTot":2096.0,"agFeito":2140,"cTot":0.2213740458,"cVal":0.361},{"d":"2024-03-16","aval":422.0,"agTot":2412.0,"agFeito":811,"cTot":0.1749585406,"cVal":0.287},{"d":"2024-03-17","aval":0.0,"agTot":0.0,"agFeito":151,"cTot":null,"cVal":null},{"d":"2024-03-18","aval":250.0,"agTot":1352.0,"agFeito":2527,"cTot":0.1849112426,"cVal":0.292},{"d":"2024-03-19","aval":532.0,"agTot":2387.0,"agFeito":2491,"cTot":0.2228739003,"cVal":0.372},{"d":"2024-03-20","aval":525.0,"agTot":2376.0,"agFeito":2112,"cTot":0.220959596,"cVal":0.371},{"d":"2024-03-21","aval":444.0,"agTot":2016.0,"agFeito":2078,"cTot":0.2202380952,"cVal":0.368},{"d":"2024-03-22","aval":432.0,"agTot":2202.0,"agFeito":1991,"cTot":0.1961852861,"cVal":0.358},{"d":"2024-03-23","aval":436.0,"agTot":2482.0,"agFeito":751,"cTot":0.1756647865,"cVal":0.283},{"d":"2024-03-24","aval":0.0,"agTot":0.0,"agFeito":117,"cTot":null,"cVal":null},{"d":"2024-03-25","aval":287.0,"agTot":1439.0,"agFeito":2176,"cTot":0.1994440584,"cVal":0.318},{"d":"2024-03-26","aval":518.0,"agTot":2663.0,"agFeito":1989,"cTot":0.1945174615,"cVal":0.35},{"d":"2024-03-27","aval":474.0,"agTot":2458.0,"agFeito":1979,"cTot":0.1928397071,"cVal":0.343},{"d":"2024-03-28","aval":463.0,"agTot":2416.0,"agFeito":1747,"cTot":0.1916390728,"cVal":0.343},{"d":"2024-03-29","aval":0.0,"agTot":31.0,"agFeito":139,"cTot":0,"cVal":null},{"d":"2024-03-30","aval":247.0,"agTot":1590.0,"agFeito":1253,"cTot":0.1553459119,"cVal":0.253},{"d":"2024-03-31","aval":0.0,"agTot":0.0,"agFeito":132,"cTot":null,"cVal":null},{"d":"2024-04-01","aval":175.0,"agTot":1067.0,"agFeito":2255,"cTot":0.1640112465,"cVal":0.27},{"d":"2024-04-02","aval":549.0,"agTot":2622.0,"agFeito":2408,"cTot":0.209382151,"cVal":0.349},{"d":"2024-04-03","aval":549.0,"agTot":2304.0,"agFeito":2206,"cTot":0.23828125,"cVal":0.404},{"d":"2024-04-04","aval":469.0,"agTot":1997.0,"agFeito":2118,"cTot":0.2348522784,"cVal":0.408},{"d":"2024-04-05","aval":481.0,"agTot":1881.0,"agFeito":1798,"cTot":0.2557150452,"cVal":0.446},{"d":"2024-04-06","aval":460.0,"agTot":2122.0,"agFeito":1080,"cTot":0.2167766258,"cVal":0.368},{"d":"2024-04-07","aval":0.0,"agTot":0.0,"agFeito":130,"cTot":null,"cVal":null},{"d":"2024-04-08","aval":263.0,"agTot":1282.0,"agFeito":2442,"cTot":0.2051482059,"cVal":0.33},{"d":"2024-04-09","aval":539.0,"agTot":2394.0,"agFeito":2193,"cTot":0.2251461988,"cVal":0.384},{"d":"2024-04-10","aval":483.0,"agTot":2129.0,"agFeito":2261,"cTot":0.2268670737,"cVal":0.38},{"d":"2024-04-11","aval":483.0,"agTot":1965.0,"agFeito":2443,"cTot":0.2458015267,"cVal":0.411},{"d":"2024-04-12","aval":484.0,"agTot":2052.0,"agFeito":2168,"cTot":0.2358674464,"cVal":0.392},{"d":"2024-04-13","aval":430.0,"agTot":2196.0,"agFeito":1248,"cTot":0.1958105647,"cVal":0.323},{"d":"2024-04-14","aval":0.0,"agTot":0.0,"agFeito":162,"cTot":null,"cVal":null},{"d":"2024-04-15","aval":272.0,"agTot":1580.0,"agFeito":2632,"cTot":0.1721518987,"cVal":0.289},{"d":"2024-04-16","aval":539.0,"agTot":2565.0,"agFeito":2402,"cTot":0.2101364522,"cVal":0.36},{"d":"2024-04-17","aval":468.0,"agTot":2416.0,"agFeito":2353,"cTot":0.1937086093,"cVal":0.329},{"d":"2024-04-18","aval":487.0,"agTot":2166.0,"agFeito":2208,"cTot":0.2248384118,"cVal":0.385},{"d":"2024-04-19","aval":485.0,"agTot":2093.0,"agFeito":2091,"cTot":0.2317247969,"cVal":0.384},{"d":"2024-04-20","aval":396.0,"agTot":2273.0,"agFeito":1104,"cTot":0.1742190937,"cVal":0.29},{"d":"2024-04-21","aval":0.0,"agTot":0.0,"agFeito":157,"cTot":null,"cVal":null},{"d":"2024-04-22","aval":291.0,"agTot":1514.0,"agFeito":2516,"cTot":0.1922060766,"cVal":0.32},{"d":"2024-04-23","aval":536.0,"agTot":2426.0,"agFeito":2574,"cTot":0.2209398186,"cVal":0.387},{"d":"2024-04-24","aval":545.0,"agTot":2447.0,"agFeito":2242,"cTot":0.2227217,"cVal":0.389},{"d":"2024-04-25","aval":468.0,"agTot":2155.0,"agFeito":2409,"cTot":0.2171693735,"cVal":0.372},{"d":"2024-04-26","aval":511.0,"agTot":2295.0,"agFeito":2334,"cTot":0.2226579521,"cVal":0.376},{"d":"2024-04-27","aval":426.0,"agTot":2374.0,"agFeito":1329,"cTot":0.1794439764,"cVal":0.301},{"d":"2024-04-28","aval":0.0,"agTot":0.0,"agFeito":175,"cTot":null,"cVal":null},{"d":"2024-04-29","aval":279.0,"agTot":1671.0,"agFeito":2602,"cTot":0.1669658887,"cVal":0.299},{"d":"2024-04-30","aval":545.0,"agTot":2996.0,"agFeito":2261,"cTot":0.1819092123,"cVal":0.327},{"d":"2024-05-01","aval":0.0,"agTot":3.0,"agFeito":1652,"cTot":0,"cVal":null},{"d":"2024-05-02","aval":537.0,"agTot":2757.0,"agFeito":2481,"cTot":0.1947769314,"cVal":0.334},{"d":"2024-05-03","aval":514.0,"agTot":2563.0,"agFeito":2436,"cTot":0.2005462349,"cVal":0.374},{"d":"2024-05-04","aval":443.0,"agTot":2459.0,"agFeito":1293,"cTot":0.1801545344,"cVal":0.308},{"d":"2024-05-05","aval":0.0,"agTot":0.0,"agFeito":189,"cTot":null,"cVal":null},{"d":"2024-05-06","aval":279.0,"agTot":1523.0,"agFeito":2540,"cTot":0.1831910703,"cVal":0.331},{"d":"2024-05-07","aval":574.0,"agTot":2957.0,"agFeito":2517,"cTot":0.1941156578,"cVal":0.351},{"d":"2024-05-08","aval":462.0,"agTot":2396.0,"agFeito":2342,"cTot":0.1928213689,"cVal":0.193},{"d":"2024-05-09","aval":424.0,"agTot":2125.0,"agFeito":2503,"cTot":0.1995294118,"cVal":0.368},{"d":"2024-05-10","aval":389.0,"agTot":2248.0,"agFeito":2178,"cTot":0.1730427046,"cVal":0.321},{"d":"2024-05-11","aval":392.0,"agTot":2289.0,"agFeito":1079,"cTot":0.1712538226,"cVal":0.284},{"d":"2024-05-12","aval":0.0,"agTot":0.0,"agFeito":205,"cTot":null,"cVal":null},{"d":"2024-05-13","aval":269.0,"agTot":1640.0,"agFeito":2595,"cTot":0.1640243902,"cVal":0.276},{"d":"2024-05-14","aval":556.0,"agTot":2785.0,"agFeito":2501,"cTot":0.1996409336,"cVal":0.359},{"d":"2024-05-15","aval":499.0,"agTot":2500.0,"agFeito":2338,"cTot":0.1996,"cVal":0.345},{"d":"2024-05-16","aval":494.0,"agTot":2199.0,"agFeito":2359,"cTot":0.2246475671,"cVal":0.381},{"d":"2024-05-17","aval":514.0,"agTot":2302.0,"agFeito":2225,"cTot":0.2232841008,"cVal":0.388},{"d":"2024-05-18","aval":419.0,"agTot":2294.0,"agFeito":1288,"cTot":0.1826503923,"cVal":0.332},{"d":"2024-05-19","aval":0.0,"agTot":0.0,"agFeito":221,"cTot":null,"cVal":null},{"d":"2024-05-20","aval":286.0,"agTot":1502.0,"agFeito":2660,"cTot":0.190412783,"cVal":0.335},{"d":"2024-05-21","aval":549.0,"agTot":2722.0,"agFeito":2527,"cTot":0.2016899339,"cVal":0.357},{"d":"2024-05-22","aval":547.0,"agTot":2550.0,"agFeito":2386,"cTot":0.2145098039,"cVal":0.369},{"d":"2024-05-23","aval":475.0,"agTot":2308.0,"agFeito":2196,"cTot":0.2058058925,"cVal":0.354},{"d":"2024-05-24","aval":431.0,"agTot":2190.0,"agFeito":2212,"cTot":0.196803653,"cVal":0.347},{"d":"2024-05-25","aval":409.0,"agTot":2263.0,"agFeito":1073,"cTot":0.1807335395,"cVal":0.33},{"d":"2024-05-26","aval":0.0,"agTot":0.0,"agFeito":257,"cTot":null,"cVal":null},{"d":"2024-05-27","aval":276.0,"agTot":1634.0,"agFeito":2565,"cTot":0.1689106487,"cVal":0.283},{"d":"2024-05-28","aval":495.0,"agTot":2648.0,"agFeito":2329,"cTot":0.1869335347,"cVal":0.319},{"d":"2024-05-29","aval":491.0,"agTot":2593.0,"agFeito":1914,"cTot":0.1893559583,"cVal":0.31},{"d":"2024-05-30","aval":0.0,"agTot":12.0,"agFeito":1353,"cTot":0,"cVal":0.0},{"d":"2024-05-31","aval":590.0,"agTot":2905.0,"agFeito":2135,"cTot":0.2030981067,"cVal":0.302},{"d":"2024-06-01","aval":319.0,"agTot":2143.0,"agFeito":1131,"cTot":0.1488567429,"cVal":0.238},{"d":"2024-06-02","aval":0.0,"agTot":0.0,"agFeito":237,"cTot":null,"cVal":null},{"d":"2024-06-03","aval":278.0,"agTot":1241.0,"agFeito":2409,"cTot":0.2240128928,"cVal":0.344},{"d":"2024-06-04","aval":544.0,"agTot":2598.0,"agFeito":2251,"cTot":0.2093918399,"cVal":0.342},{"d":"2024-06-05","aval":525.0,"agTot":2407.0,"agFeito":2260,"cTot":0.2181138346,"cVal":0.355},{"d":"2024-06-06","aval":453.0,"agTot":2126.0,"agFeito":2216,"cTot":0.2130761994,"cVal":0.344},{"d":"2024-06-07","aval":465.0,"agTot":2220.0,"agFeito":2075,"cTot":0.2094594595,"cVal":0.343},{"d":"2024-06-08","aval":357.0,"agTot":1996.0,"agFeito":992,"cTot":0.1788577154,"cVal":0.292},{"d":"2024-06-09","aval":0.0,"agTot":0.0,"agFeito":263,"cTot":null,"cVal":null},{"d":"2024-06-10","aval":273.0,"agTot":1398.0,"agFeito":2234,"cTot":0.19527897,"cVal":0.324},{"d":"2024-06-11","aval":570.0,"agTot":2545.0,"agFeito":2337,"cTot":0.2239685658,"cVal":0.371},{"d":"2024-06-12","aval":538.0,"agTot":2296.0,"agFeito":2180,"cTot":0.2343205575,"cVal":0.394},{"d":"2024-06-13","aval":480.0,"agTot":1980.0,"agFeito":2117,"cTot":0.2424242424,"cVal":0.401},{"d":"2024-06-14","aval":526.0,"agTot":2150.0,"agFeito":2214,"cTot":0.2446511628,"cVal":0.388},{"d":"2024-06-15","aval":370.0,"agTot":1888.0,"agFeito":872,"cTot":0.1959745763,"cVal":0.33},{"d":"2024-06-16","aval":1.0,"agTot":1.0,"agFeito":209,"cTot":1,"cVal":1.0},{"d":"2024-06-17","aval":310.0,"agTot":1416.0,"agFeito":2316,"cTot":0.2189265537,"cVal":0.355},{"d":"2024-06-18","aval":565.0,"agTot":2501.0,"agFeito":2191,"cTot":0.2259096361,"cVal":0.377},{"d":"2024-06-19","aval":520.0,"agTot":2254.0,"agFeito":2097,"cTot":0.230700976,"cVal":0.379},{"d":"2024-06-20","aval":497.0,"agTot":1999.0,"agFeito":2031,"cTot":0.2486243122,"cVal":0.407},{"d":"2024-06-21","aval":460.0,"agTot":1980.0,"agFeito":1825,"cTot":0.2323232323,"cVal":0.372},{"d":"2024-06-22","aval":350.0,"agTot":1763.0,"agFeito":1023,"cTot":0.1985252411,"cVal":0.336},{"d":"2024-06-23","aval":0.0,"agTot":0.0,"agFeito":189,"cTot":null,"cVal":null},{"d":"2024-06-24","aval":205.0,"agTot":1027.0,"agFeito":2313,"cTot":0.1996105161,"cVal":0.332},{"d":"2024-06-25","aval":556.0,"agTot":2668.0,"agFeito":2311,"cTot":0.2083958021,"cVal":0.354},{"d":"2024-06-26","aval":513.0,"agTot":2313.0,"agFeito":2298,"cTot":0.2217898833,"cVal":0.361},{"d":"2024-06-27","aval":487.0,"agTot":2126.0,"agFeito":2046,"cTot":0.2290686736,"cVal":0.369},{"d":"2024-06-28","aval":445.0,"agTot":2116.0,"agFeito":2059,"cTot":0.2103024575,"cVal":0.357},{"d":"2024-06-29","aval":347.0,"agTot":1929.0,"agFeito":1048,"cTot":0.1798859513,"cVal":0.291},{"d":"2024-06-30","aval":0.0,"agTot":0.0,"agFeito":158,"cTot":null,"cVal":null},{"d":"2024-07-01","aval":202.0,"agTot":1015.0,"agFeito":2122,"cTot":0.1990147783,"cVal":0.323},{"d":"2024-07-02","aval":592.0,"agTot":2713.0,"agFeito":2132,"cTot":0.2182086251,"cVal":0.361},{"d":"2024-07-03","aval":498.0,"agTot":2326.0,"agFeito":2351,"cTot":0.2141014617,"cVal":0.366},{"d":"2024-07-04","aval":449.0,"agTot":1956.0,"agFeito":2241,"cTot":0.2295501022,"cVal":0.372},{"d":"2024-07-05","aval":408.0,"agTot":2028.0,"agFeito":2023,"cTot":0.201183432,"cVal":0.33},{"d":"2024-07-06","aval":336.0,"agTot":1989.0,"agFeito":1041,"cTot":0.1689291101,"cVal":0.279},{"d":"2024-07-07","aval":0.0,"agTot":0.0,"agFeito":156,"cTot":null,"cVal":null},{"d":"2024-07-08","aval":266.0,"agTot":1303.0,"agFeito":2184,"cTot":0.2041442824,"cVal":0.32},{"d":"2024-07-09","aval":403.0,"agTot":1922.0,"agFeito":1739,"cTot":0.2096774194,"cVal":0.353},{"d":"2024-07-10","aval":580.0,"agTot":2619.0,"agFeito":2422,"cTot":0.221458572,"cVal":0.369},{"d":"2024-07-11","aval":475.0,"agTot":2187.0,"agFeito":2313,"cTot":0.2171925011,"cVal":0.38},{"d":"2024-07-12","aval":416.0,"agTot":1963.0,"agFeito":2184,"cTot":0.2119205298,"cVal":0.356},{"d":"2024-07-13","aval":346.0,"agTot":1619.0,"agFeito":1016,"cTot":0.213712168,"cVal":0.324},{"d":"2024-07-14","aval":0.0,"agTot":0.0,"agFeito":162,"cTot":null,"cVal":null},{"d":"2024-07-15","aval":318.0,"agTot":1405.0,"agFeito":2491,"cTot":0.2263345196,"cVal":0.366},{"d":"2024-07-16","aval":565.0,"agTot":2645.0,"agFeito":2427,"cTot":0.213610586,"cVal":0.358},{"d":"2024-07-17","aval":583.0,"agTot":2412.0,"agFeito":2290,"cTot":0.241708126,"cVal":0.395},{"d":"2024-07-18","aval":529.0,"agTot":2202.0,"agFeito":2194,"cTot":0.240236149,"cVal":0.399},{"d":"2024-07-19","aval":518.0,"agTot":2194.0,"agFeito":2035,"cTot":0.2360984503,"cVal":0.386},{"d":"2024-07-20","aval":357.0,"agTot":1968.0,"agFeito":946,"cTot":0.181402439,"cVal":0.28},{"d":"2024-07-21","aval":0.0,"agTot":0.0,"agFeito":150,"cTot":null,"cVal":null},{"d":"2024-07-22","aval":286.0,"agTot":1432.0,"agFeito":2406,"cTot":0.1997206704,"cVal":0.285},{"d":"2024-07-23","aval":574.0,"agTot":2602.0,"agFeito":2329,"cTot":0.2205995388,"cVal":0.375},{"d":"2024-07-24","aval":538.0,"agTot":2312.0,"agFeito":2282,"cTot":0.2326989619,"cVal":0.366},{"d":"2024-07-25","aval":460.0,"agTot":2079.0,"agFeito":2309,"cTot":0.2212602213,"cVal":0.357},{"d":"2024-07-26","aval":473.0,"agTot":1951.0,"agFeito":2142,"cTot":0.2424397745,"cVal":0.384},{"d":"2024-07-27","aval":326.0,"agTot":2014.0,"agFeito":996,"cTot":0.1618669315,"cVal":0.267},{"d":"2024-07-28","aval":0.0,"agTot":0.0,"agFeito":135,"cTot":null,"cVal":null},{"d":"2024-07-29","aval":300.0,"agTot":1459.0,"agFeito":2363,"cTot":0.2056202879,"cVal":0.33},{"d":"2024-07-30","aval":516.0,"agTot":2438.0,"agFeito":2151,"cTot":0.2116488925,"cVal":0.342},{"d":"2024-07-31","aval":476.0,"agTot":2264.0,"agFeito":2249,"cTot":0.2102473498,"cVal":0.344},{"d":"2024-08-01","aval":482.0,"agTot":1999.0,"agFeito":2031,"cTot":0.2411205603,"cVal":0.392},{"d":"2024-08-02","aval":434.0,"agTot":1962.0,"agFeito":1943,"cTot":0.2212028542,"cVal":0.359},{"d":"2024-08-03","aval":379.0,"agTot":2092.0,"agFeito":975,"cTot":0.181166348,"cVal":0.295},{"d":"2024-08-04","aval":0.0,"agTot":0.0,"agFeito":189,"cTot":null,"cVal":null},{"d":"2024-08-05","aval":281.0,"agTot":1407.0,"agFeito":2063,"cTot":0.1997157072,"cVal":0.322},{"d":"2024-08-06","aval":536.0,"agTot":2410.0,"agFeito":2171,"cTot":0.222406639,"cVal":0.375},{"d":"2024-08-07","aval":472.0,"agTot":2054.0,"agFeito":2150,"cTot":0.2297955209,"cVal":0.381},{"d":"2024-08-08","aval":456.0,"agTot":1861.0,"agFeito":2053,"cTot":0.245029554,"cVal":0.402},{"d":"2024-08-09","aval":444.0,"agTot":1939.0,"agFeito":2017,"cTot":0.2289840124,"cVal":0.379},{"d":"2024-08-10","aval":334.0,"agTot":1994.0,"agFeito":1065,"cTot":0.1675025075,"cVal":0.288},{"d":"2024-08-11","aval":0.0,"agTot":0.0,"agFeito":137,"cTot":null,"cVal":null},{"d":"2024-08-12","aval":257.0,"agTot":1393.0,"agFeito":2195,"cTot":0.1844938981,"cVal":0.303},{"d":"2024-08-13","aval":540.0,"agTot":2467.0,"agFeito":2082,"cTot":0.2188893393,"cVal":0.365},{"d":"2024-08-14","aval":510.0,"agTot":2177.0,"agFeito":2162,"cTot":0.2342673404,"cVal":0.396},{"d":"2024-08-15","aval":344.0,"agTot":1581.0,"agFeito":2027,"cTot":0.2175838077,"cVal":0.381},{"d":"2024-08-16","aval":462.0,"agTot":2070.0,"agFeito":1792,"cTot":0.2231884058,"cVal":0.383},{"d":"2024-08-17","aval":365.0,"agTot":1843.0,"agFeito":896,"cTot":0.198046663,"cVal":0.33},{"d":"2024-08-18","aval":0.0,"agTot":0.0,"agFeito":163,"cTot":null,"cVal":null},{"d":"2024-08-19","aval":289.0,"agTot":1373.0,"agFeito":2333,"cTot":0.2104879825,"cVal":0.34},{"d":"2024-08-20","aval":524.0,"agTot":2454.0,"agFeito":2185,"cTot":0.2135289324,"cVal":0.356},{"d":"2024-08-21","aval":470.0,"agTot":2070.0,"agFeito":2095,"cTot":0.2270531401,"cVal":0.378},{"d":"2024-08-22","aval":452.0,"agTot":1919.0,"agFeito":1985,"cTot":0.2355393434,"cVal":0.387},{"d":"2024-08-23","aval":461.0,"agTot":1908.0,"agFeito":1675,"cTot":0.2416142558,"cVal":0.405},{"d":"2024-08-24","aval":371.0,"agTot":1878.0,"agFeito":779,"cTot":0.1975505857,"cVal":0.305},{"d":"2024-08-25","aval":0.0,"agTot":0.0,"agFeito":140,"cTot":null,"cVal":null},{"d":"2024-08-26","aval":266.0,"agTot":1347.0,"agFeito":2228,"cTot":0.1974758723,"cVal":0.308},{"d":"2024-08-27","aval":505.0,"agTot":2320.0,"agFeito":2099,"cTot":0.2176724138,"cVal":0.377},{"d":"2024-08-28","aval":471.0,"agTot":2035.0,"agFeito":2091,"cTot":0.2314496314,"cVal":0.39},{"d":"2024-08-29","aval":391.0,"agTot":1747.0,"agFeito":1839,"cTot":0.2238122496,"cVal":0.375},{"d":"2024-08-30","aval":401.0,"agTot":1779.0,"agFeito":1507,"cTot":0.2254075323,"cVal":0.376},{"d":"2024-08-31","aval":327.0,"agTot":1797.0,"agFeito":947,"cTot":0.1819699499,"cVal":0.302},{"d":"2024-09-01","aval":0.0,"agTot":0.0,"agFeito":158,"cTot":null,"cVal":null},{"d":"2024-09-02","aval":213.0,"agTot":1069.0,"agFeito":1918,"cTot":0.199251637,"cVal":0.314},{"d":"2024-09-03","aval":473.0,"agTot":2390.0,"agFeito":2112,"cTot":0.1979079498,"cVal":0.32},{"d":"2024-09-04","aval":413.0,"agTot":2095.0,"agFeito":2209,"cTot":0.1971360382,"cVal":0.323},{"d":"2024-09-05","aval":419.0,"agTot":1941.0,"agFeito":2275,"cTot":0.2158681092,"cVal":0.355},{"d":"2024-09-06","aval":417.0,"agTot":2130.0,"agFeito":1863,"cTot":0.1957746479,"cVal":0.344},{"d":"2024-09-07","aval":2.0,"agTot":18.0,"agFeito":766,"cTot":0.1111111111,"cVal":0.25},{"d":"2024-09-08","aval":0.0,"agTot":0.0,"agFeito":188,"cTot":null,"cVal":null},{"d":"2024-09-09","aval":224.0,"agTot":1305.0,"agFeito":2575,"cTot":0.1716475096,"cVal":0.284},{"d":"2024-09-10","aval":563.0,"agTot":2876.0,"agFeito":2477,"cTot":0.1957579972,"cVal":0.325},{"d":"2024-09-11","aval":485.0,"agTot":2521.0,"agFeito":2348,"cTot":0.1923839746,"cVal":0.32},{"d":"2024-09-12","aval":477.0,"agTot":2225.0,"agFeito":2156,"cTot":0.2143820225,"cVal":0.353},{"d":"2024-09-13","aval":411.0,"agTot":2121.0,"agFeito":2279,"cTot":0.1937765205,"cVal":0.326},{"d":"2024-09-14","aval":344.0,"agTot":2101.0,"agFeito":1183,"cTot":0.1637315564,"cVal":0.277},{"d":"2024-09-15","aval":0.0,"agTot":0.0,"agFeito":170,"cTot":null,"cVal":null},{"d":"2024-09-16","aval":277.0,"agTot":1599.0,"agFeito":2943,"cTot":0.1732332708,"cVal":0.27},{"d":"2024-09-17","aval":568.0,"agTot":2824.0,"agFeito":2567,"cTot":0.2011331445,"cVal":0.326},{"d":"2024-09-18","aval":478.0,"agTot":2663.0,"agFeito":2534,"cTot":0.1794968081,"cVal":0.312},{"d":"2024-09-19","aval":434.0,"agTot":2306.0,"agFeito":2521,"cTot":0.1882046834,"cVal":0.311},{"d":"2024-09-20","aval":419.0,"agTot":2239.0,"agFeito":2284,"cTot":0.1871371148,"cVal":0.302},{"d":"2024-09-21","aval":356.0,"agTot":2172.0,"agFeito":1039,"cTot":0.1639042357,"cVal":0.26},{"d":"2024-09-22","aval":0.0,"agTot":0.0,"agFeito":248,"cTot":null,"cVal":null},{"d":"2024-09-23","aval":273.0,"agTot":1628.0,"agFeito":3098,"cTot":0.1676904177,"cVal":0.264},{"d":"2024-09-24","aval":536.0,"agTot":2988.0,"agFeito":2677,"cTot":0.1793842035,"cVal":0.285},{"d":"2024-09-25","aval":524.0,"agTot":2689.0,"agFeito":2388,"cTot":0.1948679807,"cVal":0.311},{"d":"2024-09-26","aval":469.0,"agTot":2350.0,"agFeito":2249,"cTot":0.1995744681,"cVal":0.321},{"d":"2024-09-27","aval":428.0,"agTot":2319.0,"agFeito":2441,"cTot":0.1845623113,"cVal":0.295},{"d":"2024-09-28","aval":347.0,"agTot":2306.0,"agFeito":1138,"cTot":0.1504770165,"cVal":0.251},{"d":"2024-09-29","aval":0.0,"agTot":0.0,"agFeito":193,"cTot":null,"cVal":null},{"d":"2024-09-30","aval":315.0,"agTot":1714.0,"agFeito":2683,"cTot":0.1837806301,"cVal":0.295},{"d":"2024-10-01","aval":543.0,"agTot":2885.0,"agFeito":2571,"cTot":0.1882149047,"cVal":0.304},{"d":"2024-10-02","aval":489.0,"agTot":2457.0,"agFeito":2672,"cTot":0.199023199,"cVal":0.327},{"d":"2024-10-03","aval":476.0,"agTot":2309.0,"agFeito":2451,"cTot":0.2061498484,"cVal":0.343},{"d":"2024-10-04","aval":458.0,"agTot":2338.0,"agFeito":2253,"cTot":0.1958939264,"cVal":0.316},{"d":"2024-10-05","aval":398.0,"agTot":2259.0,"agFeito":855,"cTot":0.1761841523,"cVal":0.28},{"d":"2024-10-06","aval":0.0,"agTot":0.0,"agFeito":145,"cTot":null,"cVal":null},{"d":"2024-10-07","aval":321.0,"agTot":1628.0,"agFeito":2473,"cTot":0.1971744472,"cVal":0.289},{"d":"2024-10-08","aval":555.0,"agTot":2927.0,"agFeito":2345,"cTot":0.1896139392,"cVal":0.294},{"d":"2024-10-09","aval":515.0,"agTot":2562.0,"agFeito":2275,"cTot":0.2010148322,"cVal":0.312},{"d":"2024-10-10","aval":430.0,"agTot":2264.0,"agFeito":2179,"cTot":0.1899293286,"cVal":0.292},{"d":"2024-10-11","aval":427.0,"agTot":2307.0,"agFeito":1993,"cTot":0.18508886,"cVal":0.309},{"d":"2024-10-12","aval":0.0,"agTot":0.0,"agFeito":739,"cTot":null,"cVal":null},{"d":"2024-10-13","aval":0.0,"agTot":0.0,"agFeito":152,"cTot":null,"cVal":null},{"d":"2024-10-14","aval":337.0,"agTot":1690.0,"agFeito":2897,"cTot":0.199408284,"cVal":0.281},{"d":"2024-10-15","aval":677.0,"agTot":3200.0,"agFeito":2580,"cTot":0.2115625,"cVal":0.324},{"d":"2024-10-16","aval":578.0,"agTot":2573.0,"agFeito":2519,"cTot":0.2246404975,"cVal":0.358},{"d":"2024-10-17","aval":513.0,"agTot":2257.0,"agFeito":2314,"cTot":0.2272928666,"cVal":0.373},{"d":"2024-10-18","aval":496.0,"agTot":2355.0,"agFeito":2324,"cTot":0.2106157113,"cVal":0.317},{"d":"2024-10-19","aval":375.0,"agTot":2007.0,"agFeito":1156,"cTot":0.1868460389,"cVal":0.306},{"d":"2024-10-20","aval":0.0,"agTot":0.0,"agFeito":192,"cTot":null,"cVal":null},{"d":"2024-10-21","aval":340.0,"agTot":1737.0,"agFeito":2739,"cTot":0.1957397812,"cVal":0.308},{"d":"2024-10-22","aval":599.0,"agTot":3053.0,"agFeito":2614,"cTot":0.1962004586,"cVal":0.314},{"d":"2024-10-23","aval":525.0,"agTot":2454.0,"agFeito":2486,"cTot":0.2139364303,"cVal":0.346},{"d":"2024-10-24","aval":503.0,"agTot":2162.0,"agFeito":2323,"cTot":0.2326549491,"cVal":0.377},{"d":"2024-10-25","aval":407.0,"agTot":2283.0,"agFeito":2257,"cTot":0.1782742006,"cVal":0.291},{"d":"2024-10-26","aval":404.0,"agTot":2082.0,"agFeito":875,"cTot":0.1940441883,"cVal":0.314},{"d":"2024-10-27","aval":0.0,"agTot":0.0,"agFeito":242,"cTot":null,"cVal":null},{"d":"2024-10-28","aval":350.0,"agTot":1670.0,"agFeito":2634,"cTot":0.2095808383,"cVal":0.331},{"d":"2024-10-29","aval":582.0,"agTot":2909.0,"agFeito":2471,"cTot":0.2000687521,"cVal":0.322},{"d":"2024-10-30","aval":535.0,"agTot":2623.0,"agFeito":2254,"cTot":0.2039649257,"cVal":0.335},{"d":"2024-10-31","aval":516.0,"agTot":2355.0,"agFeito":2259,"cTot":0.2191082803,"cVal":0.357},{"d":"2024-11-01","aval":514.0,"agTot":2531.0,"agFeito":2234,"cTot":0.2030817859,"cVal":0.344},{"d":"2024-11-02","aval":0.0,"agTot":0.0,"agFeito":965,"cTot":null,"cVal":null},{"d":"2024-11-03","aval":0.0,"agTot":0.0,"agFeito":402,"cTot":null,"cVal":null},{"d":"2024-11-04","aval":359.0,"agTot":1714.0,"agFeito":2780,"cTot":0.2094515753,"cVal":0.344},{"d":"2024-11-05","aval":640.0,"agTot":3247.0,"agFeito":2444,"cTot":0.19710502,"cVal":0.318},{"d":"2024-11-06","aval":554.0,"agTot":2723.0,"agFeito":2318,"cTot":0.2034520749,"cVal":0.319},{"d":"2024-11-07","aval":456.0,"agTot":2288.0,"agFeito":2269,"cTot":0.1993006993,"cVal":0.32},{"d":"2024-11-08","aval":425.0,"agTot":2366.0,"agFeito":2184,"cTot":0.1796280642,"cVal":0.291},{"d":"2024-11-09","aval":334.0,"agTot":1616.0,"agFeito":984,"cTot":0.2066831683,"cVal":0.331},{"d":"2024-11-10","aval":0.0,"agTot":0.0,"agFeito":420,"cTot":null,"cVal":null},{"d":"2024-11-11","aval":438.0,"agTot":2248.0,"agFeito":2353,"cTot":0.1948398577,"cVal":0.309},{"d":"2024-11-12","aval":587.0,"agTot":2938.0,"agFeito":2022,"cTot":0.1997957794,"cVal":0.319},{"d":"2024-11-13","aval":472.0,"agTot":2654.0,"agFeito":2373,"cTot":0.1778447626,"cVal":0.28},{"d":"2024-11-14","aval":492.0,"agTot":2677.0,"agFeito":2112,"cTot":0.1837878222,"cVal":0.306},{"d":"2024-11-15","aval":1.0,"agTot":5.0,"agFeito":1019,"cTot":0.2,"cVal":1.0},{"d":"2024-11-16","aval":22.0,"agTot":239.0,"agFeito":943,"cTot":0.09205020921,"cVal":0.314},{"d":"2024-11-17","aval":0.0,"agTot":0.0,"agFeito":371,"cTot":null,"cVal":null},{"d":"2024-11-18","aval":389.0,"agTot":2049.0,"agFeito":2955,"cTot":0.1898487067,"cVal":0.319},{"d":"2024-11-19","aval":605.0,"agTot":3005.0,"agFeito":2105,"cTot":0.2013311148,"cVal":0.326},{"d":"2024-11-20","aval":4.0,"agTot":23.0,"agFeito":1340,"cTot":0.1739130435,"cVal":0.364},{"d":"2024-11-21","aval":536.0,"agTot":2685.0,"agFeito":2746,"cTot":0.1996275605,"cVal":0.322},{"d":"2024-11-22","aval":571.0,"agTot":2613.0,"agFeito":2530,"cTot":0.2185227708,"cVal":0.352},{"d":"2024-11-23","aval":430.0,"agTot":2267.0,"agFeito":981,"cTot":0.1896779885,"cVal":0.326},{"d":"2024-11-24","aval":0.0,"agTot":0.0,"agFeito":422,"cTot":null,"cVal":null},{"d":"2024-11-25","aval":428.0,"agTot":2086.0,"agFeito":2698,"cTot":0.205177373,"cVal":0.334},{"d":"2024-11-26","aval":595.0,"agTot":2674.0,"agFeito":2570,"cTot":0.222513089,"cVal":0.357},{"d":"2024-11-27","aval":488.0,"agTot":2321.0,"agFeito":2421,"cTot":0.2102542008,"cVal":0.362},{"d":"2024-11-28","aval":491.0,"agTot":2281.0,"agFeito":2327,"cTot":0.2152564665,"cVal":0.369},{"d":"2024-11-29","aval":442.0,"agTot":2345.0,"agFeito":2399,"cTot":0.1884861407,"cVal":0.313},{"d":"2024-11-30","aval":358.0,"agTot":1995.0,"agFeito":1031,"cTot":0.1794486216,"cVal":0.296},{"d":"2024-12-01","aval":0.0,"agTot":0.0,"agFeito":379,"cTot":null,"cVal":null},{"d":"2024-12-02","aval":274.0,"agTot":1427.0,"agFeito":2556,"cTot":0.1920112123,"cVal":0.294},{"d":"2024-12-03","aval":556.0,"agTot":3063.0,"agFeito":2391,"cTot":0.1815213843,"cVal":0.302},{"d":"2024-12-04","aval":437.0,"agTot":2460.0,"agFeito":2157,"cTot":0.1776422764,"cVal":0.31},{"d":"2024-12-05","aval":409.0,"agTot":2286.0,"agFeito":2214,"cTot":0.1789151356,"cVal":0.309},{"d":"2024-12-06","aval":399.0,"agTot":2219.0,"agFeito":2106,"cTot":0.1798107256,"cVal":0.297},{"d":"2024-12-07","aval":310.0,"agTot":1939.0,"agFeito":952,"cTot":0.1598762249,"cVal":0.264},{"d":"2024-12-08","aval":0.0,"agTot":0.0,"agFeito":339,"cTot":null,"cVal":null},{"d":"2024-12-09","aval":348.0,"agTot":1788.0,"agFeito":2449,"cTot":0.1946308725,"cVal":0.295},{"d":"2024-12-10","aval":489.0,"agTot":2593.0,"agFeito":2273,"cTot":0.188584651,"cVal":0.314},{"d":"2024-12-11","aval":436.0,"agTot":2298.0,"agFeito":2102,"cTot":0.1897302002,"cVal":0.319},{"d":"2024-12-12","aval":419.0,"agTot":2079.0,"agFeito":1865,"cTot":0.2015392015,"cVal":0.329},{"d":"2024-12-13","aval":339.0,"agTot":1920.0,"agFeito":1914,"cTot":0.1765625,"cVal":0.302},{"d":"2024-12-14","aval":273.0,"agTot":1814.0,"agFeito":1022,"cTot":0.1504961411,"cVal":0.15},{"d":"2024-12-15","aval":0.0,"agTot":0.0,"agFeito":391,"cTot":null,"cVal":null},{"d":"2024-12-16","aval":321.0,"agTot":1723.0,"agFeito":1972,"cTot":0.18630296,"cVal":0.297},{"d":"2024-12-17","aval":492.0,"agTot":2410.0,"agFeito":1784,"cTot":0.2041493776,"cVal":0.328},{"d":"2024-12-18","aval":401.0,"agTot":2008.0,"agFeito":1687,"cTot":0.1997011952,"cVal":0.327},{"d":"2024-12-19","aval":400.0,"agTot":1994.0,"agFeito":1613,"cTot":0.2006018054,"cVal":0.328},{"d":"2024-12-20","aval":368.0,"agTot":2058.0,"agFeito":1451,"cTot":0.1788143829,"cVal":0.304},{"d":"2024-12-21","aval":281.0,"agTot":1795.0,"agFeito":704,"cTot":0.156545961,"cVal":0.253},{"d":"2024-12-22","aval":0.0,"agTot":0.0,"agFeito":319,"cTot":null,"cVal":null},{"d":"2024-12-23","aval":136.0,"agTot":909.0,"agFeito":1633,"cTot":0.1496149615,"cVal":0.263},{"d":"2024-12-24","aval":0.0,"agTot":0.0,"agFeito":282,"cTot":null,"cVal":null},{"d":"2024-12-25","aval":0.0,"agTot":0.0,"agFeito":416,"cTot":null,"cVal":null},{"d":"2024-12-26","aval":406.0,"agTot":2110.0,"agFeito":2238,"cTot":0.1924170616,"cVal":0.309},{"d":"2024-12-27","aval":379.0,"agTot":1879.0,"agFeito":2028,"cTot":0.2017030335,"cVal":0.336},{"d":"2024-12-28","aval":212.0,"agTot":1215.0,"agFeito":1167,"cTot":0.1744855967,"cVal":0.285},{"d":"2024-12-29","aval":0.0,"agTot":0.0,"agFeito":302,"cTot":null,"cVal":null},{"d":"2024-12-30","aval":84.0,"agTot":467.0,"agFeito":1199,"cTot":0.1798715203,"cVal":0.295},{"d":"2024-12-31","aval":0.0,"agTot":0.0,"agFeito":266,"cTot":null,"cVal":null},{"d":"2025-01-01","aval":0.0,"agTot":0.0,"agFeito":662,"cTot":null,"cVal":null},{"d":"2025-01-02","aval":482.0,"agTot":1895.0,"agFeito":2392,"cTot":0.254353562,"cVal":0.396},{"d":"2025-01-03","aval":571.0,"agTot":2254.0,"agFeito":2185,"cTot":0.2533274179,"cVal":0.415},{"d":"2025-01-04","aval":370.0,"agTot":1721.0,"agFeito":1146,"cTot":0.2149912841,"cVal":0.332},{"d":"2025-01-05","aval":0.0,"agTot":0.0,"agFeito":568,"cTot":null,"cVal":null},{"d":"2025-01-06","aval":363.0,"agTot":1423.0,"agFeito":2654,"cTot":0.25509487,"cVal":0.385},{"d":"2025-01-07","aval":737.0,"agTot":3246.0,"agFeito":2401,"cTot":0.2270486753,"cVal":0.346},{"d":"2025-01-08","aval":662.0,"agTot":2751.0,"agFeito":2287,"cTot":0.2406397674,"cVal":0.375},{"d":"2025-01-09","aval":612.0,"agTot":2588.0,"agFeito":2082,"cTot":0.2364760433,"cVal":0.37},{"d":"2025-01-10","aval":565.0,"agTot":2602.0,"agFeito":2287,"cTot":0.217140661,"cVal":0.347},{"d":"2025-01-11","aval":402.0,"agTot":2179.0,"agFeito":1124,"cTot":0.1844882974,"cVal":0.296},{"d":"2025-01-12","aval":0.0,"agTot":0.0,"agFeito":435,"cTot":null,"cVal":null},{"d":"2025-01-13","aval":333.0,"agTot":1540.0,"agFeito":2496,"cTot":0.2162337662,"cVal":0.33},{"d":"2025-01-14","aval":647.0,"agTot":2318.0,"agFeito":2388,"cTot":0.279119931,"cVal":0.334},{"d":"2025-01-15","aval":555.0,"agTot":2443.0,"agFeito":2274,"cTot":0.2271796971,"cVal":0.356},{"d":"2025-01-16","aval":527.0,"agTot":2194.0,"agFeito":2309,"cTot":0.2402005469,"cVal":0.366},{"d":"2025-01-17","aval":504.0,"agTot":2209.0,"agFeito":2063,"cTot":0.2281575373,"cVal":0.34},{"d":"2025-01-18","aval":377.0,"agTot":1858.0,"agFeito":926,"cTot":0.2029063509,"cVal":0.288},{"d":"2025-01-19","aval":0.0,"agTot":0.0,"agFeito":383,"cTot":null,"cVal":null},{"d":"2025-01-20","aval":291.0,"agTot":1457.0,"agFeito":2231,"cTot":0.1997254633,"cVal":0.288},{"d":"2025-01-21","aval":623.0,"agTot":2762.0,"agFeito":2258,"cTot":0.2255611875,"cVal":0.34},{"d":"2025-01-22","aval":522.0,"agTot":2254.0,"agFeito":2441,"cTot":0.2315882875,"cVal":0.351},{"d":"2025-01-23","aval":498.0,"agTot":2060.0,"agFeito":2341,"cTot":0.2417475728,"cVal":0.354},{"d":"2025-01-24","aval":486.0,"agTot":2125.0,"agFeito":2174,"cTot":0.2287058824,"cVal":0.342},{"d":"2025-01-25","aval":342.0,"agTot":1690.0,"agFeito":1003,"cTot":0.2023668639,"cVal":0.287},{"d":"2025-01-26","aval":0.0,"agTot":0.0,"agFeito":516,"cTot":null,"cVal":null},{"d":"2025-01-27","aval":347.0,"agTot":1798.0,"agFeito":2639,"cTot":0.1929922136,"cVal":0.28},{"d":"2025-01-28","aval":625.0,"agTot":2799.0,"agFeito":2247,"cTot":0.2232940336,"cVal":0.327},{"d":"2025-01-29","aval":546.0,"agTot":2412.0,"agFeito":2443,"cTot":0.2263681592,"cVal":0.329},{"d":"2025-01-30","aval":477.0,"agTot":2265.0,"agFeito":2207,"cTot":0.2105960265,"cVal":0.313},{"d":"2025-01-31","aval":472.0,"agTot":2327.0,"agFeito":2423,"cTot":0.2028362699,"cVal":0.312},{"d":"2025-02-01","aval":401.0,"agTot":2137.0,"agFeito":1124,"cTot":0.187646233,"cVal":0.287},{"d":"2025-02-02","aval":0.0,"agTot":0.0,"agFeito":449,"cTot":null,"cVal":null},{"d":"2025-02-03","aval":308.0,"agTot":1470.0,"agFeito":2310,"cTot":0.2095238095,"cVal":0.289},{"d":"2025-02-04","aval":578.0,"agTot":2650.0,"agFeito":2310,"cTot":0.2181132075,"cVal":0.32},{"d":"2025-02-05","aval":493.0,"agTot":2355.0,"agFeito":2254,"cTot":0.2093418259,"cVal":0.317},{"d":"2025-02-06","aval":439.0,"agTot":2094.0,"agFeito":2195,"cTot":0.2096466094,"cVal":0.32},{"d":"2025-02-07","aval":463.0,"agTot":2271.0,"agFeito":2367,"cTot":0.203874945,"cVal":0.297},{"d":"2025-02-08","aval":399.0,"agTot":2084.0,"agFeito":1237,"cTot":0.1914587332,"cVal":0.283},{"d":"2025-02-09","aval":0.0,"agTot":0.0,"agFeito":479,"cTot":null,"cVal":null},{"d":"2025-02-10","aval":297.0,"agTot":1671.0,"agFeito":2344,"cTot":0.1777378815,"cVal":0.245},{"d":"2025-02-11","aval":583.0,"agTot":2655.0,"agFeito":2203,"cTot":0.2195856874,"cVal":0.322},{"d":"2025-02-12","aval":513.0,"agTot":2339.0,"agFeito":2214,"cTot":0.2193244976,"cVal":0.316},{"d":"2025-02-13","aval":464.0,"agTot":2088.0,"agFeito":2089,"cTot":0.2222222222,"cVal":0.336},{"d":"2025-02-14","aval":466.0,"agTot":2205.0,"agFeito":2492,"cTot":0.2113378685,"cVal":0.321},{"d":"2025-02-15","aval":382.0,"agTot":2119.0,"agFeito":1008,"cTot":0.180273714,"cVal":0.262},{"d":"2025-02-16","aval":0.0,"agTot":0.0,"agFeito":468,"cTot":null,"cVal":null},{"d":"2025-02-17","aval":328.0,"agTot":1746.0,"agFeito":2384,"cTot":0.1878579611,"cVal":0.259},{"d":"2025-02-18","aval":565.0,"agTot":2541.0,"agFeito":2371,"cTot":0.2223534042,"cVal":0.325},{"d":"2025-02-19","aval":496.0,"agTot":2210.0,"agFeito":2328,"cTot":0.2244343891,"cVal":0.324},{"d":"2025-02-20","aval":466.0,"agTot":2140.0,"agFeito":2231,"cTot":0.2177570093,"cVal":0.314},{"d":"2025-02-21","aval":446.0,"agTot":2248.0,"agFeito":2199,"cTot":0.1983985765,"cVal":0.288},{"d":"2025-02-22","aval":413.0,"agTot":2115.0,"agFeito":1135,"cTot":0.1952718676,"cVal":0.282},{"d":"2025-02-23","aval":0.0,"agTot":0.0,"agFeito":447,"cTot":null,"cVal":null},{"d":"2025-02-24","aval":381.0,"agTot":1820.0,"agFeito":2322,"cTot":0.2093406593,"cVal":0.291},{"d":"2025-02-25","aval":524.0,"agTot":2584.0,"agFeito":1679,"cTot":0.2027863777,"cVal":0.292},{"d":"2025-02-26","aval":482.0,"agTot":2368.0,"agFeito":2155,"cTot":0.2035472973,"cVal":0.304},{"d":"2025-02-27","aval":473.0,"agTot":2139.0,"agFeito":1840,"cTot":0.2211313698,"cVal":0.33},{"d":"2025-02-28","aval":430.0,"agTot":2346.0,"agFeito":1914,"cTot":0.1832907076,"cVal":0.279},{"d":"2025-03-01","aval":295.0,"agTot":1792.0,"agFeito":775,"cTot":0.1646205357,"cVal":0.251},{"d":"2025-03-02","aval":0.0,"agTot":0.0,"agFeito":432,"cTot":null,"cVal":null},{"d":"2025-03-03","aval":0.0,"agTot":0.0,"agFeito":604,"cTot":null,"cVal":null},{"d":"2025-03-04","aval":0.0,"agTot":0.0,"agFeito":619,"cTot":null,"cVal":null},{"d":"2025-03-05","aval":380.0,"agTot":1980.0,"agFeito":2796,"cTot":0.1919191919,"cVal":0.276},{"d":"2025-03-06","aval":540.0,"agTot":2258.0,"agFeito":2347,"cTot":0.23914969,"cVal":0.353},{"d":"2025-03-07","aval":610.0,"agTot":2548.0,"agFeito":2495,"cTot":0.2394034537,"cVal":0.353},{"d":"2025-03-08","aval":437.0,"agTot":2046.0,"agFeito":1196,"cTot":0.2135874878,"cVal":0.318},{"d":"2025-03-09","aval":0.0,"agTot":0.0,"agFeito":469,"cTot":null,"cVal":null},{"d":"2025-03-10","aval":324.0,"agTot":1304.0,"agFeito":2358,"cTot":0.2484662577,"cVal":0.354},{"d":"2025-03-11","aval":533.0,"agTot":2488.0,"agFeito":2210,"cTot":0.2142282958,"cVal":0.321},{"d":"2025-03-12","aval":549.0,"agTot":2339.0,"agFeito":2625,"cTot":0.2347156905,"cVal":0.353},{"d":"2025-03-13","aval":528.0,"agTot":2242.0,"agFeito":2390,"cTot":0.2355040143,"cVal":0.357},{"d":"2025-03-14","aval":499.0,"agTot":2371.0,"agFeito":2241,"cTot":0.2104597216,"cVal":0.327},{"d":"2025-03-15","aval":407.0,"agTot":2112.0,"agFeito":1271,"cTot":0.1927083333,"cVal":0.292},{"d":"2025-03-16","aval":0.0,"agTot":0.0,"agFeito":523,"cTot":null,"cVal":null},{"d":"2025-03-17","aval":397.0,"agTot":1813.0,"agFeito":2664,"cTot":0.2189740761,"cVal":0.318},{"d":"2025-03-18","aval":557.0,"agTot":2708.0,"agFeito":2412,"cTot":0.2056868538,"cVal":0.304},{"d":"2025-03-19","aval":505.0,"agTot":2288.0,"agFeito":2288,"cTot":0.2207167832,"cVal":0.335},{"d":"2025-03-20","aval":520.0,"agTot":2234.0,"agFeito":2230,"cTot":0.2327663384,"cVal":0.367},{"d":"2025-03-21","aval":513.0,"agTot":2278.0,"agFeito":2245,"cTot":0.2251975417,"cVal":0.345},{"d":"2025-03-22","aval":381.0,"agTot":2210.0,"agFeito":1107,"cTot":0.17239819,"cVal":0.264},{"d":"2025-03-23","aval":0.0,"agTot":0.0,"agFeito":499,"cTot":null,"cVal":null},{"d":"2025-03-24","aval":385.0,"agTot":1860.0,"agFeito":2450,"cTot":0.2069892473,"cVal":0.293},{"d":"2025-03-25","aval":559.0,"agTot":2585.0,"agFeito":2161,"cTot":0.2162475822,"cVal":0.319},{"d":"2025-03-26","aval":516.0,"agTot":2401.0,"agFeito":2412,"cTot":0.214910454,"cVal":0.321},{"d":"2025-03-27","aval":483.0,"agTot":2126.0,"agFeito":2298,"cTot":0.227187206,"cVal":0.346},{"d":"2025-03-28","aval":489.0,"agTot":2178.0,"agFeito":2161,"cTot":0.2245179063,"cVal":0.344},{"d":"2025-03-29","aval":411.0,"agTot":2030.0,"agFeito":1194,"cTot":0.2024630542,"cVal":0.305},{"d":"2025-03-30","aval":0.0,"agTot":0.0,"agFeito":556,"cTot":null,"cVal":null},{"d":"2025-03-31","aval":408.0,"agTot":1907.0,"agFeito":2660,"cTot":0.2139486104,"cVal":0.286},{"d":"2025-04-01","aval":579.0,"agTot":2745.0,"agFeito":2397,"cTot":0.2109289617,"cVal":0.309},{"d":"2025-04-02","aval":498.0,"agTot":2406.0,"agFeito":2456,"cTot":0.2069825436,"cVal":0.315},{"d":"2025-04-03","aval":469.0,"agTot":2180.0,"agFeito":2315,"cTot":0.2151376147,"cVal":0.31},{"d":"2025-04-04","aval":488.0,"agTot":2280.0,"agFeito":2142,"cTot":0.2140350877,"cVal":0.316},{"d":"2025-04-05","aval":363.0,"agTot":2124.0,"agFeito":998,"cTot":0.1709039548,"cVal":0.243},{"d":"2025-04-06","aval":0.0,"agTot":0.0,"agFeito":425,"cTot":null,"cVal":null},{"d":"2025-04-07","aval":394.0,"agTot":1780.0,"agFeito":2387,"cTot":0.2213483146,"cVal":0.302},{"d":"2025-04-08","aval":551.0,"agTot":2658.0,"agFeito":2324,"cTot":0.2072987208,"cVal":0.295},{"d":"2025-04-09","aval":506.0,"agTot":2415.0,"agFeito":2258,"cTot":0.2095238095,"cVal":0.303},{"d":"2025-04-10","aval":477.0,"agTot":2054.0,"agFeito":2248,"cTot":0.2322297955,"cVal":0.34},{"d":"2025-04-11","aval":491.0,"agTot":2067.0,"agFeito":2037,"cTot":0.2375423319,"cVal":0.341},{"d":"2025-04-12","aval":391.0,"agTot":1933.0,"agFeito":928,"cTot":0.2022762545,"cVal":0.286},{"d":"2025-04-13","aval":0.0,"agTot":0.0,"agFeito":435,"cTot":null,"cVal":null},{"d":"2025-04-14","aval":348.0,"agTot":1854.0,"agFeito":2230,"cTot":0.1877022654,"cVal":0.263},{"d":"2025-04-15","aval":550.0,"agTot":2636.0,"agFeito":2126,"cTot":0.2086494689,"cVal":0.297},{"d":"2025-04-16","aval":458.0,"agTot":2327.0,"agFeito":1922,"cTot":0.1968199398,"cVal":0.284},{"d":"2025-04-17","aval":472.0,"agTot":2380.0,"agFeito":1972,"cTot":0.1983193277,"cVal":0.288},{"d":"2025-04-18","aval":0.0,"agTot":6.0,"agFeito":420,"cTot":0,"cVal":null},{"d":"2025-04-19","aval":129.0,"agTot":740.0,"agFeito":718,"cTot":0.1743243243,"cVal":0.281},{"d":"2025-04-20","aval":0.0,"agTot":0.0,"agFeito":367,"cTot":null,"cVal":null},{"d":"2025-04-21","aval":0.0,"agTot":0.0,"agFeito":714,"cTot":null,"cVal":null},{"d":"2025-04-22","aval":491.0,"agTot":2651.0,"agFeito":2789,"cTot":0.1852131271,"cVal":0.272},{"d":"2025-04-23","aval":442.0,"agTot":1887.0,"agFeito":2123,"cTot":0.2342342342,"cVal":0.341},{"d":"2025-04-24","aval":499.0,"agTot":2291.0,"agFeito":2377,"cTot":0.2178088171,"cVal":0.314},{"d":"2025-04-25","aval":457.0,"agTot":2260.0,"agFeito":2197,"cTot":0.2022123894,"cVal":0.3},{"d":"2025-04-26","aval":372.0,"agTot":1902.0,"agFeito":1045,"cTot":0.1955835962,"cVal":0.276},{"d":"2025-04-27","aval":0.0,"agTot":0.0,"agFeito":470,"cTot":null,"cVal":null},{"d":"2025-04-28","aval":418.0,"agTot":1873.0,"agFeito":2556,"cTot":0.2231713828,"cVal":0.304},{"d":"2025-04-29","aval":567.0,"agTot":2464.0,"agFeito":2136,"cTot":0.2301136364,"cVal":0.327},{"d":"2025-04-30","aval":507.0,"agTot":2403.0,"agFeito":1882,"cTot":0.2109862672,"cVal":0.314},{"d":"2025-05-01","aval":1.0,"agTot":10.0,"agFeito":1049,"cTot":0.1,"cVal":1.0},{"d":"2025-05-02","aval":600.0,"agTot":2743.0,"agFeito":2274,"cTot":0.2187386074,"cVal":0.322},{"d":"2025-05-03","aval":339.0,"agTot":1816.0,"agFeito":859,"cTot":0.1866740088,"cVal":0.27},{"d":"2025-05-04","aval":0.0,"agTot":0.0,"agFeito":346,"cTot":null,"cVal":null},{"d":"2025-05-05","aval":298.0,"agTot":1274.0,"agFeito":2466,"cTot":0.2339089482,"cVal":0.336},{"d":"2025-05-06","aval":553.0,"agTot":2569.0,"agFeito":2191,"cTot":0.2152588556,"cVal":0.312},{"d":"2025-05-07","aval":439.0,"agTot":2115.0,"agFeito":2059,"cTot":0.2075650118,"cVal":0.301},{"d":"2025-05-08","aval":430.0,"agTot":2029.0,"agFeito":2099,"cTot":0.2119270577,"cVal":0.315},{"d":"2025-05-09","aval":420.0,"agTot":2068.0,"agFeito":2182,"cTot":0.2030947776,"cVal":0.294},{"d":"2025-05-10","aval":316.0,"agTot":1846.0,"agFeito":859,"cTot":0.1711809317,"cVal":0.239},{"d":"2025-05-11","aval":0.0,"agTot":0.0,"agFeito":300,"cTot":null,"cVal":null},{"d":"2025-05-12","aval":290.0,"agTot":1423.0,"agFeito":2319,"cTot":0.2037947997,"cVal":0.292},{"d":"2025-05-13","aval":470.0,"agTot":2448.0,"agFeito":2075,"cTot":0.1919934641,"cVal":0.278},{"d":"2025-05-14","aval":430.0,"agTot":2158.0,"agFeito":2316,"cTot":0.1992585728,"cVal":0.289},{"d":"2025-05-15","aval":413.0,"agTot":1989.0,"agFeito":2114,"cTot":0.2076420312,"cVal":0.292},{"d":"2025-05-16","aval":459.0,"agTot":2158.0,"agFeito":2104,"cTot":0.2126969416,"cVal":0.311},{"d":"2025-05-17","aval":337.0,"agTot":1988.0,"agFeito":1075,"cTot":0.1695171026,"cVal":0.245},{"d":"2025-05-18","aval":0.0,"agTot":1.0,"agFeito":353,"cTot":0,"cVal":0.0},{"d":"2025-05-19","aval":294.0,"agTot":1654.0,"agFeito":2315,"cTot":0.1777509069,"cVal":0.231},{"d":"2025-05-20","aval":505.0,"agTot":2458.0,"agFeito":2243,"cTot":0.2054515867,"cVal":0.293},{"d":"2025-05-21","aval":453.0,"agTot":2171.0,"agFeito":2106,"cTot":0.2086596039,"cVal":0.308},{"d":"2025-05-22","aval":416.0,"agTot":2005.0,"agFeito":2011,"cTot":0.2074812968,"cVal":0.312},{"d":"2025-05-23","aval":439.0,"agTot":2083.0,"agFeito":1844,"cTot":0.2107537206,"cVal":0.328},{"d":"2025-05-24","aval":311.0,"agTot":1842.0,"agFeito":931,"cTot":0.1688382193,"cVal":0.239},{"d":"2025-05-25","aval":0.0,"agTot":0.0,"agFeito":389,"cTot":null,"cVal":null},{"d":"2025-05-26","aval":297.0,"agTot":1559.0,"agFeito":2189,"cTot":0.1905067351,"cVal":0.257},{"d":"2025-05-27","aval":519.0,"agTot":2373.0,"agFeito":2136,"cTot":0.218710493,"cVal":0.308},{"d":"2025-05-28","aval":437.0,"agTot":1965.0,"agFeito":2085,"cTot":0.2223918575,"cVal":0.313},{"d":"2025-05-29","aval":371.0,"agTot":1773.0,"agFeito":2259,"cTot":0.209249859,"cVal":0.31},{"d":"2025-05-30","aval":420.0,"agTot":2030.0,"agFeito":1842,"cTot":0.2068965517,"cVal":0.305},{"d":"2025-05-31","aval":315.0,"agTot":1941.0,"agFeito":912,"cTot":0.1622874807,"cVal":0.221},{"d":"2025-06-01","aval":0.0,"agTot":0.0,"agFeito":409,"cTot":null,"cVal":null},{"d":"2025-06-02","aval":199.0,"agTot":1081.0,"agFeito":2627,"cTot":0.1840888067,"cVal":0.269},{"d":"2025-06-03","aval":507.0,"agTot":2684.0,"agFeito":2210,"cTot":0.1888971684,"cVal":0.277},{"d":"2025-06-04","aval":477.0,"agTot":2210.0,"agFeito":2399,"cTot":0.2158371041,"cVal":0.311},{"d":"2025-06-05","aval":418.0,"agTot":2164.0,"agFeito":2133,"cTot":0.1931608133,"cVal":0.292},{"d":"2025-06-06","aval":431.0,"agTot":2287.0,"agFeito":2009,"cTot":0.1884564932,"cVal":0.28},{"d":"2025-06-07","aval":319.0,"agTot":2061.0,"agFeito":718,"cTot":0.1547792334,"cVal":0.224},{"d":"2025-06-08","aval":0.0,"agTot":0.0,"agFeito":352,"cTot":null,"cVal":null},{"d":"2025-06-09","aval":333.0,"agTot":1671.0,"agFeito":2421,"cTot":0.1992818671,"cVal":0.276},{"d":"2025-06-10","aval":438.0,"agTot":2488.0,"agFeito":2063,"cTot":0.1760450161,"cVal":0.25},{"d":"2025-06-11","aval":400.0,"agTot":2128.0,"agFeito":2094,"cTot":0.1879699248,"cVal":0.284},{"d":"2025-06-12","aval":380.0,"agTot":1888.0,"agFeito":1957,"cTot":0.2012711864,"cVal":0.315},{"d":"2025-06-13","aval":364.0,"agTot":1885.0,"agFeito":1643,"cTot":0.1931034483,"cVal":0.28},{"d":"2025-06-14","aval":276.0,"agTot":1928.0,"agFeito":624,"cTot":0.143153527,"cVal":0.204},{"d":"2025-06-15","aval":0.0,"agTot":0.0,"agFeito":387,"cTot":null,"cVal":null},{"d":"2025-06-16","aval":277.0,"agTot":1558.0,"agFeito":2351,"cTot":0.1777920411,"cVal":0.252},{"d":"2025-06-17","aval":450.0,"agTot":2329.0,"agFeito":2338,"cTot":0.1932159725,"cVal":0.29},{"d":"2025-06-18","aval":410.0,"agTot":2094.0,"agFeito":2310,"cTot":0.1957975167,"cVal":0.295},{"d":"2025-06-19","aval":7.0,"agTot":39.0,"agFeito":1105,"cTot":0.1794871795,"cVal":0.28},{"d":"2025-06-20","aval":491.0,"agTot":2558.0,"agFeito":1954,"cTot":0.1919468335,"cVal":0.279},{"d":"2025-06-21","aval":254.0,"agTot":1805.0,"agFeito":663,"cTot":0.1407202216,"cVal":0.206},{"d":"2025-06-22","aval":0.0,"agTot":1.0,"agFeito":281,"cTot":0,"cVal":0.0},{"d":"2025-06-23","aval":268.0,"agTot":1414.0,"agFeito":2449,"cTot":0.189533239,"cVal":0.27},{"d":"2025-06-24","aval":392.0,"agTot":2093.0,"agFeito":2303,"cTot":0.1872909699,"cVal":0.289},{"d":"2025-06-25","aval":386.0,"agTot":2141.0,"agFeito":2332,"cTot":0.1802895843,"cVal":0.272},{"d":"2025-06-26","aval":370.0,"agTot":1959.0,"agFeito":2361,"cTot":0.1888718734,"cVal":0.291},{"d":"2025-06-27","aval":360.0,"agTot":2195.0,"agFeito":2111,"cTot":0.1640091116,"cVal":0.253},{"d":"2025-06-28","aval":269.0,"agTot":1964.0,"agFeito":937,"cTot":0.1369653768,"cVal":0.206},{"d":"2025-06-29","aval":0.0,"agTot":0.0,"agFeito":409,"cTot":null,"cVal":null},{"d":"2025-06-30","aval":328.0,"agTot":1853.0,"agFeito":2483,"cTot":0.1770102536,"cVal":0.253},{"d":"2025-07-01","aval":445.0,"agTot":2494.0,"agFeito":2607,"cTot":0.1784282277,"cVal":0.268},{"d":"2025-07-02","aval":392.0,"agTot":2130.0,"agFeito":2533,"cTot":0.1840375587,"cVal":0.287},{"d":"2025-07-03","aval":466.0,"agTot":2439.0,"agFeito":2428,"cTot":0.1910619106,"cVal":0.284},{"d":"2025-07-04","aval":447.0,"agTot":2608.0,"agFeito":2381,"cTot":0.1713957055,"cVal":0.275},{"d":"2025-07-05","aval":260.0,"agTot":1979.0,"agFeito":782,"cTot":0.1313794846,"cVal":0.194},{"d":"2025-07-06","aval":0.0,"agTot":0.0,"agFeito":245,"cTot":null,"cVal":null},{"d":"2025-07-07","aval":229.0,"agTot":1500.0,"agFeito":2639,"cTot":0.1526666667,"cVal":0.227},{"d":"2025-07-08","aval":533.0,"agTot":2864.0,"agFeito":2535,"cTot":0.186103352,"cVal":0.276},{"d":"2025-07-09","aval":311.0,"agTot":1750.0,"agFeito":1395,"cTot":0.1777142857,"cVal":0.278},{"d":"2025-07-10","aval":456.0,"agTot":2390.0,"agFeito":2597,"cTot":0.1907949791,"cVal":0.291},{"d":"2025-07-11","aval":432.0,"agTot":2465.0,"agFeito":2202,"cTot":0.1752535497,"cVal":0.266},{"d":"2025-07-12","aval":274.0,"agTot":1935.0,"agFeito":709,"cTot":0.1416020672,"cVal":0.208},{"d":"2025-07-13","aval":0.0,"agTot":0.0,"agFeito":362,"cTot":null,"cVal":null},{"d":"2025-07-14","aval":322.0,"agTot":1760.0,"agFeito":2445,"cTot":0.1829545455,"cVal":0.268},{"d":"2025-07-15","aval":545.0,"agTot":2668.0,"agFeito":2471,"cTot":0.2042728636,"cVal":0.301},{"d":"2025-07-16","aval":444.0,"agTot":2073.0,"agFeito":2465,"cTot":0.2141823444,"cVal":0.33},{"d":"2025-07-17","aval":456.0,"agTot":2138.0,"agFeito":2408,"cTot":0.2132834425,"cVal":0.324},{"d":"2025-07-18","aval":482.0,"agTot":2382.0,"agFeito":2102,"cTot":0.2023509656,"cVal":0.306},{"d":"2025-07-19","aval":319.0,"agTot":1918.0,"agFeito":1124,"cTot":0.1663190824,"cVal":0.251},{"d":"2025-07-20","aval":0.0,"agTot":0.0,"agFeito":322,"cTot":null,"cVal":null},{"d":"2025-07-21","aval":341.0,"agTot":1665.0,"agFeito":2487,"cTot":0.2048048048,"cVal":0.293},{"d":"2025-07-22","aval":571.0,"agTot":2644.0,"agFeito":2437,"cTot":0.2159606657,"cVal":0.321},{"d":"2025-07-23","aval":501.0,"agTot":2302.0,"agFeito":2433,"cTot":0.2176368375,"cVal":0.337},{"d":"2025-07-24","aval":454.0,"agTot":2202.0,"agFeito":2294,"cTot":0.2061762035,"cVal":0.317},{"d":"2025-07-25","aval":441.0,"agTot":2408.0,"agFeito":1955,"cTot":0.1831395349,"cVal":0.278},{"d":"2025-07-26","aval":259.0,"agTot":1756.0,"agFeito":935,"cTot":0.1474943052,"cVal":0.226},{"d":"2025-07-27","aval":0.0,"agTot":0.0,"agFeito":328,"cTot":null,"cVal":null},{"d":"2025-07-28","aval":299.0,"agTot":1689.0,"agFeito":2588,"cTot":0.1770278271,"cVal":0.264},{"d":"2025-07-29","aval":525.0,"agTot":2581.0,"agFeito":2439,"cTot":0.2034095312,"cVal":0.312},{"d":"2025-07-30","aval":484.0,"agTot":2351.0,"agFeito":2447,"cTot":0.2058698426,"cVal":0.315},{"d":"2025-07-31","aval":460.0,"agTot":2158.0,"agFeito":2349,"cTot":0.2131603336,"cVal":0.329},{"d":"2025-08-01","aval":474.0,"agTot":2391.0,"agFeito":2038,"cTot":0.1982434128,"cVal":0.314},{"d":"2025-08-02","aval":314.0,"agTot":1966.0,"agFeito":832,"cTot":0.1597151577,"cVal":0.246},{"d":"2025-08-03","aval":0.0,"agTot":0.0,"agFeito":359,"cTot":null,"cVal":null},{"d":"2025-08-04","aval":283.0,"agTot":1423.0,"agFeito":2607,"cTot":0.1988756149,"cVal":0.286},{"d":"2025-08-05","aval":486.0,"agTot":2614.0,"agFeito":1943,"cTot":0.1859219587,"cVal":0.284},{"d":"2025-08-06","aval":482.0,"agTot":2324.0,"agFeito":2407,"cTot":0.2074010327,"cVal":0.31},{"d":"2025-08-07","aval":430.0,"agTot":2127.0,"agFeito":2369,"cTot":0.2021626704,"cVal":0.314},{"d":"2025-08-08","aval":403.0,"agTot":2349.0,"agFeito":2016,"cTot":0.171562367,"cVal":0.269},{"d":"2025-08-09","aval":302.0,"agTot":1862.0,"agFeito":770,"cTot":0.1621911923,"cVal":0.239},{"d":"2025-08-10","aval":0.0,"agTot":0.0,"agFeito":289,"cTot":null,"cVal":null},{"d":"2025-08-11","aval":294.0,"agTot":1609.0,"agFeito":2441,"cTot":0.1827221877,"cVal":0.26},{"d":"2025-08-12","aval":467.0,"agTot":2434.0,"agFeito":2337,"cTot":0.1918652424,"cVal":0.291},{"d":"2025-08-13","aval":422.0,"agTot":2196.0,"agFeito":2210,"cTot":0.1921675774,"cVal":0.291},{"d":"2025-08-14","aval":423.0,"agTot":2170.0,"agFeito":2010,"cTot":0.1949308756,"cVal":0.296},{"d":"2025-08-15","aval":331.0,"agTot":1931.0,"agFeito":2038,"cTot":0.1714137752,"cVal":0.271},{"d":"2025-08-16","aval":299.0,"agTot":1894.0,"agFeito":929,"cTot":0.1578669483,"cVal":0.242},{"d":"2025-08-17","aval":0.0,"agTot":0.0,"agFeito":312,"cTot":null,"cVal":null},{"d":"2025-08-18","aval":269.0,"agTot":1495.0,"agFeito":2352,"cTot":0.1799331104,"cVal":0.266},{"d":"2025-08-19","aval":469.0,"agTot":2477.0,"agFeito":2469,"cTot":0.1893419459,"cVal":0.297},{"d":"2025-08-20","aval":444.0,"agTot":2195.0,"agFeito":2245,"cTot":0.2022779043,"cVal":0.314},{"d":"2025-08-21","aval":436.0,"agTot":2170.0,"agFeito":2293,"cTot":0.200921659,"cVal":0.313},{"d":"2025-08-22","aval":440.0,"agTot":2386.0,"agFeito":2024,"cTot":0.1844090528,"cVal":0.296},{"d":"2025-08-23","aval":305.0,"agTot":1959.0,"agFeito":1194,"cTot":0.1556916794,"cVal":0.236},{"d":"2025-08-24","aval":0.0,"agTot":0.0,"agFeito":415,"cTot":null,"cVal":null},{"d":"2025-08-25","aval":346.0,"agTot":1714.0,"agFeito":2830,"cTot":0.2018669778,"cVal":0.292},{"d":"2025-08-26","aval":457.0,"agTot":2464.0,"agFeito":2419,"cTot":0.1854707792,"cVal":0.283},{"d":"2025-08-27","aval":449.0,"agTot":2226.0,"agFeito":2278,"cTot":0.2017070979,"cVal":0.313},{"d":"2025-08-28","aval":441.0,"agTot":2224.0,"agFeito":2334,"cTot":0.1982913669,"cVal":0.304},{"d":"2025-08-29","aval":419.0,"agTot":2334.0,"agFeito":2112,"cTot":0.1795201371,"cVal":0.273},{"d":"2025-08-30","aval":323.0,"agTot":2112.0,"agFeito":1298,"cTot":0.1529356061,"cVal":0.235},{"d":"2025-08-31","aval":0.0,"agTot":0.0,"agFeito":384,"cTot":null,"cVal":null},{"d":"2025-09-01","aval":259.0,"agTot":1469.0,"agFeito":2649,"cTot":0.1763104152,"cVal":0.254},{"d":"2025-09-02","aval":513.0,"agTot":2795.0,"agFeito":2531,"cTot":0.1835420394,"cVal":0.279},{"d":"2025-09-03","aval":455.0,"agTot":2454.0,"agFeito":2417,"cTot":0.1854115729,"cVal":0.28},{"d":"2025-09-04","aval":474.0,"agTot":2468.0,"agFeito":2450,"cTot":0.1920583468,"cVal":0.298},{"d":"2025-09-05","aval":444.0,"agTot":2460.0,"agFeito":2020,"cTot":0.1804878049,"cVal":0.28},{"d":"2025-09-06","aval":324.0,"agTot":2107.0,"agFeito":987,"cTot":0.1537731372,"cVal":0.239},{"d":"2025-09-07","aval":0.0,"agTot":2.0,"agFeito":399,"cTot":0,"cVal":0.0},{"d":"2025-09-08","aval":304.0,"agTot":1583.0,"agFeito":2653,"cTot":0.1920404296,"cVal":0.28},{"d":"2025-09-09","aval":523.0,"agTot":2862.0,"agFeito":2372,"cTot":0.1827393431,"cVal":0.294},{"d":"2025-09-10","aval":484.0,"agTot":2441.0,"agFeito":2428,"cTot":0.1982793937,"cVal":0.318},{"d":"2025-09-11","aval":429.0,"agTot":2283.0,"agFeito":2534,"cTot":0.1879106439,"cVal":0.28},{"d":"2025-09-12","aval":408.0,"agTot":2390.0,"agFeito":2358,"cTot":0.1707112971,"cVal":0.248},{"d":"2025-09-13","aval":275.0,"agTot":2110.0,"agFeito":1141,"cTot":0.1303317536,"cVal":0.195},{"d":"2025-09-14","aval":0.0,"agTot":0.0,"agFeito":812,"cTot":null,"cVal":null},{"d":"2025-09-15","aval":302.0,"agTot":1872.0,"agFeito":3641,"cTot":0.1613247863,"cVal":0.235},{"d":"2025-09-16","aval":462.0,"agTot":2838.0,"agFeito":3309,"cTot":0.1627906977,"cVal":0.243},{"d":"2025-09-17","aval":486.0,"agTot":2818.0,"agFeito":3026,"cTot":0.1724627395,"cVal":0.254},{"d":"2025-09-18","aval":500.0,"agTot":2894.0,"agFeito":2895,"cTot":0.1727712509,"cVal":0.257},{"d":"2025-09-19","aval":431.0,"agTot":3015.0,"agFeito":2733,"cTot":0.1429519071,"cVal":0.217},{"d":"2025-09-20","aval":303.0,"agTot":2436.0,"agFeito":1248,"cTot":0.1243842365,"cVal":0.179},{"d":"2025-09-21","aval":0.0,"agTot":0.0,"agFeito":627,"cTot":null,"cVal":null},{"d":"2025-09-22","aval":295.0,"agTot":1958.0,"agFeito":3473,"cTot":0.1506639428,"cVal":0.219},{"d":"2025-09-23","aval":519.0,"agTot":3309.0,"agFeito":2960,"cTot":0.1568449683,"cVal":0.237},{"d":"2025-09-24","aval":481.0,"agTot":3036.0,"agFeito":2768,"cTot":0.1584321476,"cVal":0.238},{"d":"2025-09-25","aval":499.0,"agTot":2891.0,"agFeito":2751,"cTot":0.1726046351,"cVal":0.25},{"d":"2025-09-26","aval":513.0,"agTot":3054.0,"agFeito":2540,"cTot":0.1679764244,"cVal":0.251},{"d":"2025-09-27","aval":380.0,"agTot":2382.0,"agFeito":1429,"cTot":0.1595298069,"cVal":0.229},{"d":"2025-09-28","aval":1.0,"agTot":2.0,"agFeito":697,"cTot":0.5,"cVal":0.5},{"d":"2025-09-29","aval":334.0,"agTot":2211.0,"agFeito":3276,"cTot":0.1510628675,"cVal":0.212},{"d":"2025-09-30","aval":562.0,"agTot":3295.0,"agFeito":2899,"cTot":0.1705614568,"cVal":0.263},{"d":"2025-10-01","aval":518.0,"agTot":3018.0,"agFeito":2846,"cTot":0.1716368456,"cVal":0.266},{"d":"2025-10-02","aval":528.0,"agTot":2996.0,"agFeito":2940,"cTot":0.17623498,"cVal":0.27},{"d":"2025-10-03","aval":552.0,"agTot":3153.0,"agFeito":2829,"cTot":0.1750713606,"cVal":0.275},{"d":"2025-10-04","aval":345.0,"agTot":2355.0,"agFeito":1197,"cTot":0.1464968153,"cVal":0.219},{"d":"2025-10-05","aval":0.0,"agTot":0.0,"agFeito":781,"cTot":null,"cVal":null},{"d":"2025-10-06","aval":351.0,"agTot":1965.0,"agFeito":3192,"cTot":0.1786259542,"cVal":0.267},{"d":"2025-10-07","aval":568.0,"agTot":3578.0,"agFeito":2924,"cTot":0.1587479039,"cVal":0.236},{"d":"2025-10-08","aval":540.0,"agTot":3104.0,"agFeito":3055,"cTot":0.1739690722,"cVal":0.265},{"d":"2025-10-09","aval":465.0,"agTot":2947.0,"agFeito":2973,"cTot":0.1577875806,"cVal":0.237},{"d":"2025-10-10","aval":511.0,"agTot":3120.0,"agFeito":2566,"cTot":0.1637820513,"cVal":0.253},{"d":"2025-10-11","aval":366.0,"agTot":2241.0,"agFeito":1343,"cTot":0.1633199465,"cVal":0.239},{"d":"2025-10-12","aval":0.0,"agTot":0.0,"agFeito":795,"cTot":null,"cVal":null},{"d":"2025-10-13","aval":351.0,"agTot":1891.0,"agFeito":2912,"cTot":0.1856160762,"cVal":0.267},{"d":"2025-10-14","aval":645.0,"agTot":3691.0,"agFeito":2649,"cTot":0.1747493904,"cVal":0.268},{"d":"2025-10-15","aval":583.0,"agTot":3264.0,"agFeito":2252,"cTot":0.1786151961,"cVal":0.281},{"d":"2025-10-16","aval":548.0,"agTot":2869.0,"agFeito":2058,"cTot":0.1910073196,"cVal":0.298},{"d":"2025-10-17","aval":493.0,"agTot":2740.0,"agFeito":1731,"cTot":0.1799270073,"cVal":0.283},{"d":"2025-10-18","aval":335.0,"agTot":1948.0,"agFeito":1031,"cTot":0.1719712526,"cVal":0.265},{"d":"2025-10-19","aval":0.0,"agTot":0.0,"agFeito":456,"cTot":null,"cVal":null},{"d":"2025-10-20","aval":301.0,"agTot":1575.0,"agFeito":1999,"cTot":0.1911111111,"cVal":0.276},{"d":"2025-10-21","aval":533.0,"agTot":2711.0,"agFeito":2158,"cTot":0.1966064183,"cVal":0.3},{"d":"2025-10-22","aval":527.0,"agTot":2381.0,"agFeito":2139,"cTot":0.2213355733,"cVal":0.336},{"d":"2025-10-23","aval":416.0,"agTot":2092.0,"agFeito":1994,"cTot":0.1988527725,"cVal":0.296},{"d":"2025-10-24","aval":392.0,"agTot":2027.0,"agFeito":1777,"cTot":0.1933892452,"cVal":0.309},{"d":"2025-10-25","aval":289.0,"agTot":1677.0,"agFeito":943,"cTot":0.1723315444,"cVal":0.267},{"d":"2025-10-26","aval":0.0,"agTot":0.0,"agFeito":551,"cTot":null,"cVal":null},{"d":"2025-10-27","aval":346.0,"agTot":1541.0,"agFeito":2462,"cTot":0.2245295263,"cVal":0.318},{"d":"2025-10-28","aval":478.0,"agTot":2454.0,"agFeito":2363,"cTot":0.1947840261,"cVal":0.289},{"d":"2025-10-29","aval":429.0,"agTot":2118.0,"agFeito":2179,"cTot":0.2025495751,"cVal":0.299},{"d":"2025-10-30","aval":432.0,"agTot":2054.0,"agFeito":2068,"cTot":0.2103213242,"cVal":0.31},{"d":"2025-10-31","aval":391.0,"agTot":2110.0,"agFeito":1716,"cTot":0.1853080569,"cVal":0.28},{"d":"2025-11-01","aval":298.0,"agTot":1674.0,"agFeito":860,"cTot":0.1780167264,"cVal":0.261},{"d":"2025-11-02","aval":0.0,"agTot":0.0,"agFeito":423,"cTot":null,"cVal":null},{"d":"2025-11-03","aval":223.0,"agTot":1230.0,"agFeito":2197,"cTot":0.181300813,"cVal":0.245},{"d":"2025-11-04","aval":547.0,"agTot":2773.0,"agFeito":2339,"cTot":0.197259286,"cVal":0.307},{"d":"2025-11-05","aval":463.0,"agTot":2271.0,"agFeito":2223,"cTot":0.203874945,"cVal":0.309},{"d":"2025-11-06","aval":437.0,"agTot":2090.0,"agFeito":2046,"cTot":0.2090909091,"cVal":0.319},{"d":"2025-11-07","aval":464.0,"agTot":2157.0,"agFeito":1908,"cTot":0.2151135837,"cVal":0.32},{"d":"2025-11-08","aval":261.0,"agTot":1681.0,"agFeito":983,"cTot":0.1552647234,"cVal":0.235},{"d":"2025-11-09","aval":0.0,"agTot":0.0,"agFeito":601,"cTot":null,"cVal":null},{"d":"2025-11-10","aval":305.0,"agTot":1536.0,"agFeito":2341,"cTot":0.1985677083,"cVal":0.294},{"d":"2025-11-11","aval":557.0,"agTot":2711.0,"agFeito":2066,"cTot":0.2054592401,"cVal":0.304},{"d":"2025-11-12","aval":462.0,"agTot":2234.0,"agFeito":2300,"cTot":0.2068039391,"cVal":0.31},{"d":"2025-11-13","aval":466.0,"agTot":2182.0,"agFeito":2354,"cTot":0.2135655362,"cVal":0.332},{"d":"2025-11-14","aval":478.0,"agTot":2447.0,"agFeito":1923,"cTot":0.1953412342,"cVal":0.29},{"d":"2025-11-15","aval":0.0,"agTot":0.0,"agFeito":904,"cTot":null,"cVal":null},{"d":"2025-11-16","aval":0.0,"agTot":0.0,"agFeito":673,"cTot":null,"cVal":null},{"d":"2025-11-17","aval":337.0,"agTot":1896.0,"agFeito":2517,"cTot":0.177742616,"cVal":0.263},{"d":"2025-11-18","aval":562.0,"agTot":2963.0,"agFeito":2580,"cTot":0.1896726291,"cVal":0.286},{"d":"2025-11-19","aval":508.0,"agTot":2725.0,"agFeito":2441,"cTot":0.1864220183,"cVal":0.302},{"d":"2025-11-20","aval":10.0,"agTot":53.0,"agFeito":1001,"cTot":0.1886792453,"cVal":0.27},{"d":"2025-11-21","aval":564.0,"agTot":2941.0,"agFeito":2298,"cTot":0.1917715063,"cVal":0.296},{"d":"2025-11-22","aval":300.0,"agTot":1820.0,"agFeito":1089,"cTot":0.1648351648,"cVal":0.246},{"d":"2025-11-23","aval":0.0,"agTot":0.0,"agFeito":635,"cTot":null,"cVal":null},{"d":"2025-11-24","aval":369.0,"agTot":1921.0,"agFeito":2487,"cTot":0.1920874545,"cVal":0.285},{"d":"2025-11-25","aval":551.0,"agTot":2783.0,"agFeito":2549,"cTot":0.197987783,"cVal":0.308},{"d":"2025-11-26","aval":486.0,"agTot":2398.0,"agFeito":2464,"cTot":0.2026688907,"cVal":0.325},{"d":"2025-11-27","aval":421.0,"agTot":2309.0,"agFeito":2465,"cTot":0.182330013,"cVal":0.292},{"d":"2025-11-28","aval":398.0,"agTot":2372.0,"agFeito":1995,"cTot":0.1677908938,"cVal":0.269},{"d":"2025-11-29","aval":334.0,"agTot":1952.0,"agFeito":1074,"cTot":0.1711065574,"cVal":0.257},{"d":"2025-11-30","aval":3.0,"agTot":4.0,"agFeito":411,"cTot":0.75,"cVal":null},{"d":"2025-12-01","aval":300.0,"agTot":1591.0,"agFeito":2712,"cTot":0.1885606537,"cVal":0.282},{"d":"2025-12-02","aval":507.0,"agTot":2848.0,"agFeito":2409,"cTot":0.1780196629,"cVal":0.248},{"d":"2025-12-03","aval":438.0,"agTot":2360.0,"agFeito":2454,"cTot":0.1855932203,"cVal":0.266},{"d":"2025-12-04","aval":434.0,"agTot":2336.0,"agFeito":2462,"cTot":0.1857876712,"cVal":0.282},{"d":"2025-12-05","aval":456.0,"agTot":2376.0,"agFeito":2148,"cTot":0.1919191919,"cVal":0.288},{"d":"2025-12-06","aval":306.0,"agTot":1870.0,"agFeito":987,"cTot":0.1636363636,"cVal":0.244},{"d":"2025-12-07","aval":0.0,"agTot":0.0,"agFeito":616,"cTot":null,"cVal":null},{"d":"2025-12-08","aval":243.0,"agTot":1433.0,"agFeito":2639,"cTot":0.1695743196,"cVal":0.246},{"d":"2025-12-09","aval":534.0,"agTot":3016.0,"agFeito":2592,"cTot":0.1770557029,"cVal":0.251},{"d":"2025-12-10","aval":459.0,"agTot":2556.0,"agFeito":2371,"cTot":0.1795774648,"cVal":0.252},{"d":"2025-12-11","aval":436.0,"agTot":2398.0,"agFeito":2230,"cTot":0.1818181818,"cVal":0.263},{"d":"2025-12-12","aval":433.0,"agTot":2423.0,"agFeito":2132,"cTot":0.1787040858,"cVal":0.254},{"d":"2025-12-13","aval":269.0,"agTot":1888.0,"agFeito":1136,"cTot":0.1424788136,"cVal":0.199},{"d":"2025-12-14","aval":0.0,"agTot":0.0,"agFeito":786,"cTot":null,"cVal":null},{"d":"2025-12-15","aval":345.0,"agTot":1925.0,"agFeito":2535,"cTot":0.1792207792,"cVal":0.246},{"d":"2025-12-16","aval":516.0,"agTot":3006.0,"agFeito":2249,"cTot":0.1716566866,"cVal":0.24},{"d":"2025-12-17","aval":434.0,"agTot":2508.0,"agFeito":2201,"cTot":0.173046252,"cVal":0.245},{"d":"2025-12-18","aval":432.0,"agTot":2427.0,"agFeito":1917,"cTot":0.1779975278,"cVal":0.261},{"d":"2025-12-19","aval":365.0,"agTot":2440.0,"agFeito":1606,"cTot":0.1495901639,"cVal":0.213},{"d":"2025-12-20","aval":243.0,"agTot":1766.0,"agFeito":886,"cTot":0.137599094,"cVal":0.189},{"d":"2025-12-21","aval":0.0,"agTot":0.0,"agFeito":579,"cTot":null,"cVal":null},{"d":"2025-12-22","aval":325.0,"agTot":2062.0,"agFeito":2105,"cTot":0.157613967,"cVal":0.214},{"d":"2025-12-23","aval":415.0,"agTot":2768.0,"agFeito":2058,"cTot":0.1499277457,"cVal":0.212},{"d":"2025-12-24","aval":1.0,"agTot":5.0,"agFeito":372,"cTot":0.2,"cVal":0.333},{"d":"2025-12-25","aval":0.0,"agTot":1.0,"agFeito":532,"cTot":0,"cVal":null},{"d":"2025-12-26","aval":355.0,"agTot":2065.0,"agFeito":2121,"cTot":0.1719128329,"cVal":0.228},{"d":"2025-12-27","aval":243.0,"agTot":1381.0,"agFeito":1007,"cTot":0.1759594497,"cVal":0.242},{"d":"2025-12-28","aval":0.0,"agTot":0.0,"agFeito":619,"cTot":null,"cVal":null},{"d":"2025-12-29","aval":312.0,"agTot":1595.0,"agFeito":2133,"cTot":0.1956112853,"cVal":0.276},{"d":"2025-12-30","aval":388.0,"agTot":2066.0,"agFeito":1961,"cTot":0.1878025169,"cVal":0.257},{"d":"2025-12-31","aval":0.0,"agTot":0.0,"agFeito":569,"cTot":null,"cVal":null},{"d":"2026-01-01","aval":0.0,"agTot":0.0,"agFeito":751,"cTot":null,"cVal":null},{"d":"2026-01-02","aval":361.0,"agTot":1860.0,"agFeito":1999,"cTot":0.1940860215,"cVal":0.266},{"d":"2026-01-03","aval":269.0,"agTot":1327.0,"agFeito":1033,"cTot":0.2027128862,"cVal":0.279},{"d":"2026-01-04","aval":0.0,"agTot":0.0,"agFeito":792,"cTot":null,"cVal":null},{"d":"2026-01-05","aval":298.0,"agTot":1543.0,"agFeito":2579,"cTot":0.1931302657,"cVal":0.258},{"d":"2026-01-06","aval":583.0,"agTot":3034.0,"agFeito":3221,"cTot":0.1921555702,"cVal":0.251},{"d":"2026-01-07","aval":605.0,"agTot":2878.0,"agFeito":3035,"cTot":0.2102154274,"cVal":0.295},{"d":"2026-01-08","aval":624.0,"agTot":2675.0,"agFeito":2671,"cTot":0.233271028,"cVal":0.332},{"d":"2026-01-09","aval":554.0,"agTot":2743.0,"agFeito":2585,"cTot":0.2019686475,"cVal":0.277},{"d":"2026-01-10","aval":350.0,"agTot":1871.0,"agFeito":1306,"cTot":0.1870657402,"cVal":0.258},{"d":"2026-01-11","aval":0.0,"agTot":0.0,"agFeito":673,"cTot":null,"cVal":null},{"d":"2026-01-12","aval":356.0,"agTot":1911.0,"agFeito":2738,"cTot":0.1862899006,"cVal":0.251},{"d":"2026-01-13","aval":596.0,"agTot":3177.0,"agFeito":2909,"cTot":0.1875983632,"cVal":0.248},{"d":"2026-01-14","aval":538.0,"agTot":2688.0,"agFeito":2695,"cTot":0.2001488095,"cVal":0.267},{"d":"2026-01-15","aval":479.0,"agTot":2590.0,"agFeito":2623,"cTot":0.1849420849,"cVal":0.254},{"d":"2026-01-16","aval":458.0,"agTot":2683.0,"agFeito":2434,"cTot":0.1707044353,"cVal":0.234},{"d":"2026-01-17","aval":311.0,"agTot":1934.0,"agFeito":1233,"cTot":0.1608066184,"cVal":0.216},{"d":"2026-01-18","aval":0.0,"agTot":0.0,"agFeito":714,"cTot":null,"cVal":null},{"d":"2026-01-19","aval":330.0,"agTot":2006.0,"agFeito":2815,"cTot":0.1645064806,"cVal":0.221},{"d":"2026-01-20","aval":472.0,"agTot":2843.0,"agFeito":2402,"cTot":0.1660218079,"cVal":0.229},{"d":"2026-01-21","aval":501.0,"agTot":2720.0,"agFeito":2535,"cTot":0.1841911765,"cVal":0.259},{"d":"2026-01-22","aval":448.0,"agTot":2574.0,"agFeito":2271,"cTot":0.174048174,"cVal":0.245},{"d":"2026-01-23","aval":450.0,"agTot":2685.0,"agFeito":2027,"cTot":0.1675977654,"cVal":0.236},{"d":"2026-01-24","aval":291.0,"agTot":1855.0,"agFeito":1047,"cTot":0.1568733154,"cVal":0.216},{"d":"2026-01-25","aval":0.0,"agTot":0.0,"agFeito":443,"cTot":null,"cVal":null},{"d":"2026-01-26","aval":322.0,"agTot":1783.0,"agFeito":2618,"cTot":0.1805945036,"cVal":0.256},{"d":"2026-01-27","aval":519.0,"agTot":2762.0,"agFeito":2394,"cTot":0.1879073135,"cVal":0.264},{"d":"2026-01-28","aval":500.0,"agTot":2393.0,"agFeito":2455,"cTot":0.2089427497,"cVal":0.304},{"d":"2026-01-29","aval":457.0,"agTot":2207.0,"agFeito":2347,"cTot":0.2070684187,"cVal":0.311},{"d":"2026-01-30","aval":434.0,"agTot":2358.0,"agFeito":2354,"cTot":0.1840542833,"cVal":0.279},{"d":"2026-01-31","aval":293.0,"agTot":1895.0,"agFeito":1208,"cTot":0.1546174142,"cVal":0.217},{"d":"2026-02-01","aval":0.0,"agTot":0.0,"agFeito":687,"cTot":null,"cVal":null},{"d":"2026-02-02","aval":246.0,"agTot":1485.0,"agFeito":2405,"cTot":0.1656565657,"cVal":0.252},{"d":"2026-02-03","aval":502.0,"agTot":2949.0,"agFeito":2212,"cTot":0.1702271957,"cVal":0.251},{"d":"2026-02-04","aval":468.0,"agTot":2428.0,"agFeito":2508,"cTot":0.1927512356,"cVal":0.278},{"d":"2026-02-05","aval":426.0,"agTot":2416.0,"agFeito":2570,"cTot":0.1763245033,"cVal":0.271},{"d":"2026-02-06","aval":420.0,"agTot":2593.0,"agFeito":2094,"cTot":0.1619745469,"cVal":0.247},{"d":"2026-02-07","aval":292.0,"agTot":1947.0,"agFeito":836,"cTot":0.1499743195,"cVal":0.211},{"d":"2026-02-08","aval":0.0,"agTot":0.0,"agFeito":635,"cTot":null,"cVal":null},{"d":"2026-02-09","aval":363.0,"agTot":2198.0,"agFeito":2698,"cTot":0.1651501365,"cVal":0.23},{"d":"2026-02-10","aval":458.0,"agTot":2846.0,"agFeito":2521,"cTot":0.1609276177,"cVal":0.243},{"d":"2026-02-11","aval":437.0,"agTot":2449.0,"agFeito":2598,"cTot":0.1784401797,"cVal":0.26},{"d":"2026-02-12","aval":396.0,"agTot":2468.0,"agFeito":2274,"cTot":0.1604538088,"cVal":0.24},{"d":"2026-02-13","aval":423.0,"agTot":2850.0,"agFeito":2220,"cTot":0.1484210526,"cVal":0.23},{"d":"2026-02-14","aval":142.0,"agTot":998.0,"agFeito":1171,"cTot":0.1422845691,"cVal":0.252},{"d":"2026-02-15","aval":0.0,"agTot":0.0,"agFeito":674,"cTot":null,"cVal":null},{"d":"2026-02-16","aval":2.0,"agTot":13.0,"agFeito":2201,"cTot":0.1538461538,"cVal":0.25},{"d":"2026-02-17","aval":0.0,"agTot":13.0,"agFeito":789,"cTot":0,"cVal":0.0},{"d":"2026-02-18","aval":333.0,"agTot":2168.0,"agFeito":2677,"cTot":0.153597786,"cVal":0.226},{"d":"2026-02-19","aval":463.0,"agTot":3264.0,"agFeito":2916,"cTot":0.1418504902,"cVal":0.217},{"d":"2026-02-20","aval":538.0,"agTot":3276.0,"agFeito":2603,"cTot":0.1642246642,"cVal":0.257},{"d":"2026-02-21","aval":320.0,"agTot":2020.0,"agFeito":1152,"cTot":0.1584158416,"cVal":0.233},{"d":"2026-02-22","aval":0.0,"agTot":0.0,"agFeito":560,"cTot":null,"cVal":null},{"d":"2026-02-23","aval":315.0,"agTot":2324.0,"agFeito":2977,"cTot":0.1355421687,"cVal":0.203},{"d":"2026-02-24","aval":541.0,"agTot":3145.0,"agFeito":2696,"cTot":0.1720190779,"cVal":0.273},{"d":"2026-02-25","aval":452.0,"agTot":2728.0,"agFeito":2615,"cTot":0.1656891496,"cVal":0.265},{"d":"2026-02-26","aval":427.0,"agTot":2644.0,"agFeito":2457,"cTot":0.1614977307,"cVal":0.266},{"d":"2026-02-27","aval":429.0,"agTot":2736.0,"agFeito":2253,"cTot":0.1567982456,"cVal":0.262},{"d":"2026-02-28","aval":319.0,"agTot":2029.0,"agFeito":1317,"cTot":0.1572203056,"cVal":0.249},{"d":"2026-03-01","aval":0.0,"agTot":0.0,"agFeito":592,"cTot":null,"cVal":null},{"d":"2026-03-02","aval":244.0,"agTot":1609.0,"agFeito":3167,"cTot":0.1516469857,"cVal":0.244},{"d":"2026-03-03","aval":490.0,"agTot":3179.0,"agFeito":2641,"cTot":0.1541365209,"cVal":0.249},{"d":"2026-03-04","aval":468.0,"agTot":2762.0,"agFeito":2866,"cTot":0.169442433,"cVal":0.263},{"d":"2026-03-05","aval":446.0,"agTot":2730.0,"agFeito":2603,"cTot":0.1633699634,"cVal":0.256},{"d":"2026-03-06","aval":396.0,"agTot":2803.0,"agFeito":2277,"cTot":0.141277203,"cVal":0.228},{"d":"2026-03-07","aval":293.0,"agTot":1964.0,"agFeito":1208,"cTot":0.149185336,"cVal":0.246},{"d":"2026-03-08","aval":0.0,"agTot":0.0,"agFeito":543,"cTot":null,"cVal":null},{"d":"2026-03-09","aval":301.0,"agTot":1928.0,"agFeito":2606,"cTot":0.156120332,"cVal":0.23},{"d":"2026-03-10","aval":461.0,"agTot":3206.0,"agFeito":2392,"cTot":0.1437928883,"cVal":0.217},{"d":"2026-03-11","aval":426.0,"agTot":2743.0,"agFeito":2321,"cTot":0.1553044112,"cVal":0.247},{"d":"2026-03-12","aval":422.0,"agTot":2694.0,"agFeito":2065,"cTot":0.156644395,"cVal":0.257},{"d":"2026-03-13","aval":383.0,"agTot":2815.0,"agFeito":2291,"cTot":0.1360568384,"cVal":0.221},{"d":"2026-03-14","aval":277.0,"agTot":1922.0,"agFeito":984,"cTot":0.1441207076,"cVal":0.221},{"d":"2026-03-15","aval":0.0,"agTot":0.0,"agFeito":513,"cTot":null,"cVal":null},{"d":"2026-03-16","aval":194.0,"agTot":1391.0,"agFeito":2677,"cTot":0.1394680086,"cVal":0.195367573},{"d":"2026-03-17","aval":451.0,"agTot":3107.0,"agFeito":2566,"cTot":0.1451560991,"cVal":0.2322348095},{"d":"2026-03-18","aval":419.0,"agTot":2683.0,"agFeito":2374,"cTot":0.1561684681,"cVal":0.2498509243},{"d":"2026-03-19","aval":339.0,"agTot":2426.0,"agFeito":2306,"cTot":0.1397361913,"cVal":0.24231594},{"d":"2026-03-20","aval":379.0,"agTot":2828.0,"agFeito":2011,"cTot":0.1340169731,"cVal":0.2221570926},{"d":"2026-03-21","aval":290.0,"agTot":2094.0,"agFeito":1115,"cTot":0.1384909265,"cVal":0.2148148148},{"d":"2026-03-22","aval":0.0,"agTot":0.0,"agFeito":566,"cTot":0.0,"cVal":0.0},{"d":"2026-03-23","aval":271.0,"agTot":1837.0,"agFeito":2601,"cTot":0.1475231355,"cVal":0.2283066554},{"d":"2026-03-24","aval":474.0,"agTot":3060.0,"agFeito":2504,"cTot":0.1549019608,"cVal":0.266591676},{"d":"2026-03-25","aval":374.0,"agTot":2579.0,"agFeito":2512,"cTot":0.1450174486,"cVal":0.2480106101},{"d":"2026-03-26","aval":389.0,"agTot":2464.0,"agFeito":2281,"cTot":0.1578733766,"cVal":0.2642663043},{"d":"2026-03-27","aval":407.0,"agTot":2475.0,"agFeito":1890,"cTot":0.1644444444,"cVal":0.262242268},{"d":"2026-03-28","aval":257.0,"agTot":1894.0,"agFeito":1027,"cTot":0.1356916579,"cVal":0.2181663837},{"d":"2026-03-29","aval":0.0,"agTot":0.0,"agFeito":551,"cTot":0.0,"cVal":0.0},{"d":"2026-03-30","aval":301.0,"agTot":1838.0,"agFeito":2217,"cTot":0.1637649619,"cVal":0.2583690987},{"d":"2026-03-31","aval":445.0,"agTot":2901.0,"agFeito":2099,"cTot":0.1533953809,"cVal":0.254576659},{"d":"2026-04-01","aval":414.0,"agTot":2536.0,"agFeito":2437,"cTot":0.1632492114,"cVal":0.2739907346},{"d":"2026-04-02","aval":372.0,"agTot":2708.0,"agFeito":2259,"cTot":0.1373707533,"cVal":0.2384615385},{"d":"2026-04-03","aval":0.0,"agTot":null,"agFeito":null,"cTot":null,"cVal":null},{"d":"2026-04-04","aval":218.0,"agTot":1499.0,"agFeito":1157,"cTot":0.1454302869,"cVal":0.243575419},{"d":"2026-04-05","aval":0.0,"agTot":0.0,"agFeito":532,"cTot":0.0,"cVal":0.0},{"d":"2026-04-06","aval":258.0,"agTot":1714.0,"agFeito":2276,"cTot":0.1505250875,"cVal":0.2436260623},{"d":"2026-04-07","aval":511.0,"agTot":2869.0,"agFeito":2325,"cTot":0.17811084,"cVal":0.2867564534},{"d":"2026-04-08","aval":435.0,"agTot":2375.0,"agFeito":2300,"cTot":0.1831578947,"cVal":0.3037709497},{"d":"2026-04-09","aval":405.0,"agTot":2337.0,"agFeito":2213,"cTot":0.1732991014,"cVal":0.2673267327},{"d":"2026-04-10","aval":413.0,"agTot":2229.0,"agFeito":2129,"cTot":0.1852848811,"cVal":0.2990586531},{"d":"2026-04-11","aval":276.0,"agTot":1857.0,"agFeito":1022,"cTot":0.1486268174,"cVal":0.2410480349},{"d":"2026-04-12","aval":0.0,"agTot":0.0,"agFeito":529,"cTot":0.0,"cVal":0.0},{"d":"2026-04-13","aval":277.0,"agTot":1716.0,"agFeito":2298,"cTot":0.1614219114,"cVal":0.2548298068},{"d":"2026-04-14","aval":474.0,"agTot":2664.0,"agFeito":1933,"cTot":0.1779279279,"cVal":0.2788235294},{"d":"2026-04-15","aval":380.0,"agTot":2309.0,"agFeito":2192,"cTot":0.1645734084,"cVal":0.274368231},{"d":"2026-04-16","aval":406.0,"agTot":2118.0,"agFeito":1926,"cTot":0.1916902738,"cVal":0.3005181347},{"d":"2026-04-17","aval":385.0,"agTot":2349.0,"agFeito":1901,"cTot":0.1638995317,"cVal":0.2669902913},{"d":"2026-04-18","aval":243.0,"agTot":1560.0,"agFeito":1040,"cTot":0.1557692308,"cVal":0.2417910448},{"d":"2026-04-19","aval":0.0,"agTot":0.0,"agFeito":441,"cTot":0.0,"cVal":0.0},{"d":"2026-04-20","aval":325.0,"agTot":1700.0,"agFeito":1992,"cTot":0.1911764706,"cVal":0.2987132353},{"d":"2026-04-21","aval":0.0,"agTot":2.0,"agFeito":1171,"cTot":0,"cVal":0.0},{"d":"2026-04-22","aval":463.0,"agTot":2858.0,"agFeito":2259,"cTot":0.1620013996,"cVal":0.2580824972},{"d":"2026-04-23","aval":365.0,"agTot":1942.0,"agFeito":2117,"cTot":0.1879505664,"cVal":0.2957860616},{"d":"2026-04-24","aval":354.0,"agTot":2282.0,"agFeito":1902,"cTot":0.1551270815,"cVal":0.2643764003},{"d":"2026-04-25","aval":266.0,"agTot":1615.0,"agFeito":1068,"cTot":0.1647058824,"cVal":0.2692307692},{"d":"2026-04-26","aval":0.0,"agTot":0.0,"agFeito":488,"cTot":0.0,"cVal":0.0},{"d":"2026-04-27","aval":316.0,"agTot":1847.0,"agFeito":2242,"cTot":0.1710882512,"cVal":0.2726488352},{"d":"2026-04-28","aval":476.0,"agTot":2454.0,"agFeito":2205,"cTot":0.1939690302,"cVal":0.3005050505},{"d":"2026-04-29","aval":396.0,"agTot":2279.0,"agFeito":2368,"cTot":0.1737604212,"cVal":0.2727272727},{"d":"2026-04-30","aval":415.0,"agTot":2607.0,"agFeito":2156,"cTot":0.1591868048,"cVal":0.2735662492},{"d":"2026-05-01","aval":0.0,"agTot":0.0,"agFeito":903,"cTot":0.0,"cVal":0.0},{"d":"2026-05-02","aval":242.0,"agTot":1560.0,"agFeito":993,"cTot":0.1551282051,"cVal":0.2894736842},{"d":"2026-05-03","aval":0.0,"agTot":0.0,"agFeito":569,"cTot":0.0,"cVal":0.0},{"d":"2026-05-04","aval":291.0,"agTot":1755.0,"agFeito":2544,"cTot":0.1658119658,"cVal":0.2686980609},{"d":"2026-05-05","aval":476.0,"agTot":2870.0,"agFeito":2772,"cTot":0.1658536585,"cVal":0.2785254535},{"d":"2026-05-06","aval":443.0,"agTot":2418.0,"agFeito":2858,"cTot":0.1832092639,"cVal":0.2995267072},{"d":"2026-05-07","aval":419.0,"agTot":2325.0,"agFeito":2503,"cTot":0.1802150538,"cVal":0.2915796799},{"d":"2026-05-08","aval":418.0,"agTot":2378.0,"agFeito":2057,"cTot":0.1757779647,"cVal":0.2914923291},{"d":"2026-05-09","aval":283.0,"agTot":1802.0,"agFeito":1016,"cTot":0.1570477248,"cVal":0.2582116788},{"d":"2026-05-10","aval":0.0,"agTot":0.0,"agFeito":null,"cTot":0.0,"cVal":0.0},{"d":"2026-05-11","aval":345.0,"agTot":1967.0,"agFeito":2455,"cTot":0.175394001,"cVal":0.2839506173},{"d":"2026-05-12","aval":478.0,"agTot":2835.0,"agFeito":2392,"cTot":0.1686067019,"cVal":0.2700564972},{"d":"2026-05-13","aval":450.0,"agTot":2458.0,"agFeito":2511,"cTot":0.1830756713,"cVal":0.2978160159},{"d":"2026-05-14","aval":425.0,"agTot":2232.0,"agFeito":2287,"cTot":0.1904121864,"cVal":0.3084179971},{"d":"2026-05-15","aval":386.0,"agTot":2350.0,"agFeito":1961,"cTot":0.1642553191,"cVal":0.2930903569},{"d":"2026-05-16","aval":295.0,"agTot":1678.0,"agFeito":1140,"cTot":0.1758045292,"cVal":0.2847490347},{"d":"2026-05-17","aval":0.0,"agTot":0.0,"agFeito":553,"cTot":0.0,"cVal":0.0},{"d":"2026-05-18","aval":314.0,"agTot":1826.0,"agFeito":2503,"cTot":0.1719605696,"cVal":0.2929104478},{"d":"2026-05-19","aval":458.0,"agTot":2653.0,"agFeito":2534,"cTot":0.1726347531,"cVal":0.2816728167},{"d":"2026-05-20","aval":426.0,"agTot":2440.0,"agFeito":2512,"cTot":0.1745901639,"cVal":0.2759067358},{"d":"2026-05-21","aval":409.0,"agTot":2258.0,"agFeito":2412,"cTot":0.1811337467,"cVal":0.2953068592},{"d":"2026-05-22","aval":403.0,"agTot":2400.0,"agFeito":1889,"cTot":0.1679166667,"cVal":0.2810320781},{"d":"2026-05-23","aval":259.0,"agTot":1651.0,"agFeito":1018,"cTot":0.1568746214,"cVal":0.2490384615},{"d":"2026-05-24","aval":0.0,"agTot":0.0,"agFeito":527,"cTot":0.0,"cVal":0.0},{"d":"2026-05-25","aval":315.0,"agTot":1823.0,"agFeito":2547,"cTot":0.1727921009,"cVal":0.264261745},{"d":"2026-05-26","aval":436.0,"agTot":2572.0,"agFeito":2312,"cTot":0.1695178849,"cVal":0.2581409118},{"d":"2026-05-27","aval":381.0,"agTot":2395.0,"agFeito":2360,"cTot":0.1590814196,"cVal":0.2565656566},{"d":"2026-05-28","aval":423.0,"agTot":2255.0,"agFeito":1824,"cTot":0.1875831486,"cVal":0.2983074753},{"d":"2026-05-29","aval":406.0,"agTot":2405.0,"agFeito":1912,"cTot":0.1688149688,"cVal":0.2699468085},{"d":"2026-05-30","aval":291.0,"agTot":1686.0,"agFeito":1085,"cTot":0.1725978648,"cVal":0.2631103074},{"d":"2026-05-31","aval":0.0,"agTot":0.0,"agFeito":467,"cTot":0.0,"cVal":0.0},{"d":"2026-06-01","aval":264.0,"agTot":1587.0,"agFeito":2292,"cTot":0.1663516068,"cVal":0.2540904716},{"d":"2026-06-02","aval":514.0,"agTot":2690.0,"agFeito":2020,"cTot":0.1910780669,"cVal":0.2776877364},{"d":"2026-06-03","aval":447.0,"agTot":2671.0,"agFeito":2173,"cTot":0.1673530513,"cVal":0.2505605381},{"d":"2026-06-04","aval":1.0,"agTot":1.0,"agFeito":831,"cTot":1,"cVal":1},{"d":"2026-06-05","aval":454.0,"agTot":2643.0,"agFeito":2236,"cTot":0.1717744987,"cVal":0.2884371029},{"d":"2026-06-06","aval":248.0,"agTot":1561.0,"agFeito":855,"cTot":0.1588725176,"cVal":0.2366412214},{"d":"2026-06-07","aval":0.0,"agTot":0.0,"agFeito":480,"cTot":0.0,"cVal":0.0},{"d":"2026-06-08","aval":303.0,"agTot":1684.0,"agFeito":2231,"cTot":0.1799287411,"cVal":0.2683790965},{"d":"2026-06-09","aval":456.0,"agTot":2501.0,"agFeito":2310,"cTot":0.1823270692,"cVal":0.2687094873},{"d":"2026-06-10","aval":374.0,"agTot":2230.0,"agFeito":2204,"cTot":0.1677130045,"cVal":0.257221458},{"d":"2026-06-11","aval":376.0,"agTot":1908.0,"agFeito":2174,"cTot":0.1970649895,"cVal":0.2991249006},{"d":"2026-06-12","aval":319.0,"agTot":2103.0,"agFeito":1719,"cTot":0.1516880647,"cVal":0.2373511905},{"d":"2026-06-13","aval":223.0,"agTot":1464.0,"agFeito":878,"cTot":0.1523224044,"cVal":0.2369819341},{"d":"2026-06-14","aval":0.0,"agTot":0.0,"agFeito":504,"cTot":0.0,"cVal":0.0},{"d":"2026-06-15","aval":296.0,"agTot":1617.0,"agFeito":2058,"cTot":0.1830550402,"cVal":0.2647584973},{"d":"2026-06-16","aval":395.0,"agTot":2484.0,"agFeito":1866,"cTot":0.1590177134,"cVal":0.2501583281},{"d":"2026-06-17","aval":387.0,"agTot":2055.0,"agFeito":1785,"cTot":0.1883211679,"cVal":0.2858197932},{"d":"2026-06-18","aval":340.0,"agTot":1832.0,"agFeito":2072,"cTot":0.1855895197,"cVal":0.2878916173}];
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3xljWW_66JfDNmSd8Ixq7lNlkYhX4U9tuGiJGeo6WrOtRyZp0lEGrxP9eGjA6SYURBjYq6HeH4pm_/pub?output=csv";
+
+const METRICS = [
+  {key:'aval',    label:'Avaliações diárias',          short:'Avaliações',        type:'count', agg:'sum'},
+  {key:'agTot',   label:'Agendamentos para a data',    short:'Agend. p/ data',    type:'count', agg:'sum'},
+  {key:'agFeito', label:'Agendamentos feitos na data', short:'Agend. feitos',     type:'count', agg:'sum'},
+  {key:'cTot',    label:'Comparecimento total',        short:'Comp. total',       type:'pct',   agg:'mean'},
+  {key:'cVal',    label:'Comparecimento válido',       short:'Comp. válido',      type:'pct',   agg:'mean'},
+];
+
+// data is loaded dynamically; starts from embedded snapshot, then live CSV
+let DATA=[], MIN_DT, MAX_DT, YEARS=[];
+const state = {
+  metric:'aval',
+  mode:'total',
+  from: SNAPSHOT[0].d, to: SNAPSHOT[SNAPSHOT.length-1].d,
+  month: SNAPSHOT[SNAPSHOT.length-1].d.slice(0,7),
+  year: +SNAPSHOT[SNAPSHOT.length-1].d.slice(0,4),
+  showMA:true, showTR:true,
+};
+
+// ---------- formatting ----------
+const nf0 = new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmtVal = (v,type)=> v==null?'—' : type==='pct'? nf1.format(v*100)+'%' : nf0.format(Math.round(v));
+const fmtAxis = (v,type)=> type==='pct'? nf0.format(v*100)+'%' : (Math.abs(v)>=1000? nf0.format(v): nf1.format(v).replace(',0',''));
+const fmtDateBR = dt => dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const MONTHS_ABBR=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// ---------- filtering ----------
+function filtered(){
+  let a=MIN_DT, b=MAX_DT;
+  const m=state.mode;
+  if(m==='range'){ a=new Date(state.from+'T00:00:00'); b=new Date(state.to+'T00:00:00'); }
+  else if(m==='month'){ const [y,mo]=state.month.split('-').map(Number); a=new Date(y,mo-1,1); b=new Date(y,mo,0); }
+  else if(m==='year'){ a=new Date(state.year,0,1); b=new Date(state.year,11,31); }
+  else if(m.startsWith('last')){ const n=+m.slice(4); b=MAX_DT; a=new Date(MAX_DT); a.setDate(a.getDate()-(n-1)); }
+  if(a>b){ const t=a;a=b;b=t; }
+  return {rows:DATA.filter(r=>r.dt>=a && r.dt<=b), a, b};
+}
+
+// ---------- analytics ----------
+function movingAvg(pts,w){ // pts: [{dt,x,v}] valid only, ordered
+  const out=[];
+  for(let i=0;i<pts.length;i++){
+    if(i<w-1) continue;
+    let s=0; for(let j=i-w+1;j<=i;j++) s+=pts[j].v;
+    out.push({dt:pts[i].dt, v:s/w});
+  }
+  return out;
+}
+function regression(pts){ // x = days from first, least squares
+  if(pts.length<2) return null;
+  const x0=pts[0].dt.getTime();
+  const xs=pts.map(p=>(p.dt.getTime()-x0)/86400000);
+  const ys=pts.map(p=>p.v);
+  const n=xs.length, sx=xs.reduce((a,b)=>a+b,0), sy=ys.reduce((a,b)=>a+b,0);
+  const sxx=xs.reduce((a,b)=>a+b*b,0), sxy=xs.reduce((a,b,i)=>a+b*ys[i],0);
+  const den=n*sxx-sx*sx; if(den===0) return null;
+  const slope=(n*sxy-sx*sy)/den, intercept=(sy-slope*sx)/n;
+  return {slope, intercept, x0, lastX:xs[xs.length-1], firstDt:pts[0].dt, lastDt:pts[pts.length-1].dt};
+}
+
+// ---------- nice scale ----------
+function niceStep(range,target){
+  if(range<=0) return 1;
+  const raw=range/target, mag=Math.pow(10,Math.floor(Math.log10(raw))), n=raw/mag;
+  return (n<1.5?1:n<3?2:n<7?5:10)*mag;
+}
+function scale(maxV){           // returns {ymax, step}
+  if(maxV<=0) return {ymax:1,step:0.5};
+  const step=niceStep(maxV,5);
+  let ymax=Math.ceil(maxV/step)*step;
+  if(ymax-maxV < step*0.12) ymax+=step;   // small headroom above peak
+  return {ymax,step};
+}
+function yTicks(ymax,step){
+  const t=[]; for(let v=0;v<=ymax+1e-9;v+=step) t.push(+v.toFixed(10));
+  return t;
+}
+
+// ---------- render chart ----------
+const svg=document.getElementById('svg'), host=document.getElementById('host'), tip=document.getElementById('tip');
+const NS='http://www.w3.org/2000/svg';
+let CUR=null; // current draw context for hover
+
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+function draw(){
+  const M=METRICS.find(m=>m.key===state.metric);
+  const {rows,a,b}=filtered();
+  const valid=rows.filter(r=>r[M.key]!=null).map(r=>({dt:r.dt,v:r[M.key]}));
+  const empty=document.getElementById('empty');
+  svg.innerHTML='';
+  if(valid.length===0){ empty.classList.remove('hidden'); CUR=null; tip.style.opacity=0; return; }
+  empty.classList.add('hidden');
+
+  const W=960,H=420, ml=58,mr=20,mt=18,mb=38;
+  const pw=W-ml-mr, ph=H-mt-mb;
+  const t0=a.getTime(), t1=b.getTime(), tspan=Math.max(1,t1-t0);
+  const X=dt=>ml+((dt.getTime()-t0)/tspan)*pw;
+
+  // y domain
+  let maxV=Math.max(...valid.map(p=>p.v));
+  const ma=state.showMA?movingAvg(valid,10):[];
+  if(ma.length) maxV=Math.max(maxV,...ma.map(p=>p.v));
+  const reg=regression(valid);
+  if(state.showTR&&reg){ maxV=Math.max(maxV, reg.intercept, reg.intercept+reg.slope*reg.lastX); }
+  const {ymax,step}=scale(maxV);
+  const Y=v=>mt+ph-(v/ymax)*ph;
+
+  // grid + y labels
+  const ticks=yTicks(ymax,step);
+  for(const tk of ticks){
+    const y=Y(tk);
+    svg.appendChild(el('line',{x1:ml,y1:y,x2:ml+pw,y2:y,stroke:'var(--grid)','stroke-width':1}));
+    const tx=el('text',{x:ml-9,y:y+4,'text-anchor':'end','font-size':11,fill:'var(--faint)','font-family':'var(--ui)'});
+    tx.textContent=fmtAxis(tk,M.type); svg.appendChild(tx);
+  }
+  // x baseline
+  svg.appendChild(el('line',{x1:ml,y1:mt+ph,x2:ml+pw,y2:mt+ph,stroke:'var(--border-strong)','stroke-width':1}));
+
+  // x ticks
+  const days=(t1-t0)/86400000;
+  let xticks=[];
+  const pushU=(d)=>{ if(!xticks.some(z=>z.getTime()===d.getTime())) xticks.push(d); };
+  if(days<=70){ const step=Math.ceil(days/7); for(let i=0;i<=days;i+=step){const d=new Date(a);d.setDate(d.getDate()+i);pushU(d);} pushU(b); }
+  else { // monthly-ish
+    const months=days/30; const stepM=Math.max(1,Math.ceil(months/7));
+    let d=new Date(a.getFullYear(),a.getMonth(),1);
+    while(d<=b){ if(d>=a)pushU(new Date(d)); d.setMonth(d.getMonth()+stepM); }
+  }
+  for(const d of xticks){
+    const x=X(d); if(x<ml-1||x>ml+pw+1) continue;
+    let lab = days<=70 ? d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')
+            : MONTHS_ABBR[d.getMonth()]+(days>400?'/'+String(d.getFullYear()).slice(2):'');
+    const tx=el('text',{x:x,y:mt+ph+20,'text-anchor':'middle','font-size':11,fill:'var(--faint)','font-family':'var(--ui)'});
+    tx.textContent=lab; svg.appendChild(tx);
+  }
+
+  // main series path (with gaps on missing days)
+  const idxOf=new Map(valid.map((p,i)=>[p.dt.getTime(),i]));
+  let dPath='', pen=false;
+  for(const r of rows){
+    if(r[M.key]==null){ pen=false; continue; }
+    const x=X(r.dt), y=Y(r[M.key]);
+    dPath += (pen?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' '; pen=true;
+  }
+  // soft area under line
+  if(valid.length>1){
+    let area='M'+X(valid[0].dt).toFixed(1)+' '+(mt+ph)+' ';
+    for(const r of rows){ if(r[M.key]==null) continue; area+='L'+X(r.dt).toFixed(1)+' '+Y(r[M.key]).toFixed(1)+' '; }
+    area+='L'+X(valid[valid.length-1].dt).toFixed(1)+' '+(mt+ph)+' Z';
+    // only fill when continuous-ish; acceptable approximation
+    svg.appendChild(el('path',{d:area,fill:'var(--series-soft)',stroke:'none'}));
+  }
+  svg.appendChild(el('path',{d:dPath,fill:'none',stroke:'var(--series)','stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+
+  // moving average
+  if(state.showMA && ma.length>1){
+    let p=''; ma.forEach((q,i)=>{ p+=(i?'L':'M')+X(q.dt).toFixed(1)+' '+Y(q.v).toFixed(1)+' '; });
+    svg.appendChild(el('path',{d:p,fill:'none',stroke:'var(--ma)','stroke-width':2.2,'stroke-linejoin':'round'}));
+  }
+  // regression trend
+  if(state.showTR && reg){
+    const x1=X(reg.firstDt), y1=Y(reg.intercept);
+    const x2=X(reg.lastDt),  y2=Y(reg.intercept+reg.slope*reg.lastX);
+    svg.appendChild(el('line',{x1,y1,x2,y2,stroke:'var(--trend)','stroke-width':2.2,'stroke-dasharray':'7 5','stroke-linecap':'round'}));
+  }
+
+  // hover capture
+  const hv=el('rect',{x:ml,y:mt,width:pw,height:ph,fill:'transparent'});
+  svg.appendChild(hv);
+  const crossV=el('line',{y1:mt,y2:mt+ph,stroke:'var(--border-strong)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+  const dot=el('circle',{r:4.5,fill:'#fff',stroke:'var(--series)','stroke-width':2.5,opacity:0});
+  svg.appendChild(crossV); svg.appendChild(dot);
+
+  CUR={M,rows,valid,ma,reg,X,Y,ml,mr,mt,mb,pw,ph,W,H,t0,tspan,crossV,dot,maMap:new Map(ma.map(q=>[dayKey(q.dt),q.v]))};
+
+  updateLegendStats(M,valid,ma,reg,a,b);
+}
+
+function dayKey(dt){ return dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate(); }
+
+// hover handlers (bound once)
+function onMove(ev){
+  if(!CUR) return;
+  const {M,valid,X,Y,ml,pw,crossV,dot,maMap}=CUR;
+  const rect=svg.getBoundingClientRect();
+  const px=ev.touches?ev.touches[0].clientX:ev.clientX;
+  const sx=(px-rect.left)/rect.width*960;
+  // nearest valid point by svg-x
+  let best=null,bd=1e9;
+  for(const p of valid){ const d=Math.abs(X(p.dt)-sx); if(d<bd){bd=d;best=p;} }
+  if(!best){ return; }
+  const x=X(best.dt), y=Y(best.v);
+  crossV.setAttribute('x1',x); crossV.setAttribute('x2',x); crossV.setAttribute('opacity',1);
+  dot.setAttribute('cx',x); dot.setAttribute('cy',y); dot.setAttribute('opacity',1);
+  // tooltip
+  let rows=`<div class="td">${fmtDateBR(best.dt)}</div>`;
+  rows+=`<div class="tr"><span class="sw" style="background:var(--series)"></span>${M.short}<b>${fmtVal(best.v,M.type)}</b></div>`;
+  if(state.showMA){ const mv=maMap.get(dayKey(best.dt)); if(mv!=null) rows+=`<div class="tr"><span class="sw" style="background:var(--ma)"></span>Média 10d<b>${fmtVal(mv,M.type)}</b></div>`; }
+  tip.innerHTML=rows;
+  const hostRect=host.getBoundingClientRect();
+  const tx=(x/960)*hostRect.width, ty=(y/420)*hostRect.height;
+  tip.style.left=Math.max(60,Math.min(hostRect.width-60,tx))+'px';
+  tip.style.top=Math.max(46,ty)+'px';
+  tip.style.opacity=1;
+}
+function onLeave(){ if(!CUR)return; CUR.crossV.setAttribute('opacity',0); CUR.dot.setAttribute('opacity',0); tip.style.opacity=0; }
+svg.addEventListener('mousemove',onMove);
+svg.addEventListener('mouseleave',onLeave);
+svg.addEventListener('touchstart',onMove,{passive:true});
+svg.addEventListener('touchmove',onMove,{passive:true});
+svg.addEventListener('touchend',onLeave);
+
+// ---------- legend + stats ----------
+function updateLegendStats(M,valid,ma,reg,a,b){
+  document.getElementById('lgMA').classList.toggle('hidden',!(state.showMA&&ma.length>1));
+  document.getElementById('lgTR').classList.toggle('hidden',!(state.showTR&&reg));
+  const vals=valid.map(p=>p.v);
+  const sum=vals.reduce((x,y)=>x+y,0), mean=sum/vals.length;
+  const mn=Math.min(...vals), mx=Math.max(...vals);
+  const S=[];
+  if(M.type==='count'){
+    S.push(['Total',nf0.format(Math.round(sum))]);
+    S.push(['Média/dia',nf0.format(Math.round(mean))]);
+  } else {
+    S.push(['Média',fmtVal(mean,'pct')]);
+  }
+  S.push(['Mínimo',fmtVal(mn,M.type)]);
+  S.push(['Máximo',fmtVal(mx,M.type)]);
+  S.push(['Dias com dado',nf0.format(vals.length)]);
+  let trendCell='';
+  if(reg){
+    const perDay = M.type==='pct'? nf1.format(reg.slope*100)+' pp/dia' : (Math.abs(reg.slope)>=1?nf1.format(reg.slope):nf1.format(reg.slope))+' /dia';
+    const up=reg.slope>=0;
+    trendCell=`<div class="stat"><div class="k">Tendência</div><div class="v ${up?'up':'down'}">${up?'▲':'▼'} ${perDay.replace('-','')}</div></div>`;
+  }
+  document.getElementById('stats').innerHTML =
+    S.map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')+trendCell;
+}
+
+// ---------- KPI cards ----------
+function renderKPIs(){
+  const {rows}=filtered();
+  const host=document.getElementById('kpis'); host.innerHTML='';
+  for(const M of METRICS){
+    const vals=rows.map(r=>r[M.key]).filter(v=>v!=null);
+    let big,sub;
+    if(M.agg==='sum'){ const s=vals.reduce((a,b)=>a+b,0); big=nf0.format(Math.round(s));
+      sub=vals.length?('média '+nf0.format(Math.round(s/vals.length))+'/dia'):'sem dados'; }
+    else { const m=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null; big=m==null?'—':fmtVal(m,'pct');
+      sub=vals.length?('média do período'):'sem dados'; }
+    const b=document.createElement('button');
+    b.className='kpi'+(M.key===state.metric?' active':'');
+    b.innerHTML=`<div class="lab">${M.label}</div><div class="val">${big}</div><div class="sub">${sub}</div>`;
+    b.onclick=()=>{ state.metric=M.key; syncMetric(); draw(); markActive(); };
+    host.appendChild(b);
+  }
+}
+function markActive(){
+  [...document.querySelectorAll('.kpi')].forEach((c,i)=>c.classList.toggle('active',METRICS[i].key===state.metric));
+}
+
+// ---------- metric segmented ----------
+function renderMetricSegs(){
+  const host=document.getElementById('metricSegs'); host.innerHTML='';
+  for(const M of METRICS){
+    const s=document.createElement('button');
+    s.className='seg'+(M.key===state.metric?' on':'');
+    s.textContent=M.short; s.title=M.label;
+    s.onclick=()=>{ state.metric=M.key; syncMetric(); draw(); markActive(); };
+    host.appendChild(s);
+  }
+}
+function syncMetric(){
+  [...document.querySelectorAll('#metricSegs .seg')].forEach((s,i)=>s.classList.toggle('on',METRICS[i].key===state.metric));
+  const M=METRICS.find(m=>m.key===state.metric);
+  document.getElementById('chartTitle').textContent=M.label;
+  document.getElementById('chartUnit').textContent = M.type==='pct'?'% por dia':'contagem por dia';
+}
+
+// ---------- date controls ----------
+function refreshBounds(){
+  const lo=DATA[0].d, hi=DATA[DATA.length-1].d;
+  const ys=document.getElementById('dYear');
+  ys.innerHTML=''; YEARS.forEach(y=>{ const o=document.createElement('option'); o.value=y;o.textContent=y; ys.appendChild(o); });
+  ys.value=state.year;
+  const f=document.getElementById('dFrom'), t=document.getElementById('dTo'), mo=document.getElementById('dMonth');
+  f.min=lo; f.max=hi; f.value=state.from;
+  t.min=lo; t.max=hi; t.value=state.to;
+  mo.min=lo.slice(0,7); mo.max=hi.slice(0,7); mo.value=state.month;
+}
+function setupDateControls(){
+  const mode=document.getElementById('dateMode');
+  const yearSel=document.getElementById('dYear');
+  const dFrom=document.getElementById('dFrom'), dTo=document.getElementById('dTo'), dMonth=document.getElementById('dMonth');
+  function showFields(){
+    document.getElementById('rangeFields').classList.toggle('hidden',state.mode!=='range');
+    document.getElementById('monthField').classList.toggle('hidden',state.mode!=='month');
+    document.getElementById('yearField').classList.toggle('hidden',state.mode!=='year');
+  }
+  function refresh(){ showFields(); renderKPIs(); draw(); updateRangeTag(); markActive(); }
+  mode.onchange=()=>{ state.mode=mode.value; refresh(); };
+  dFrom.onchange=()=>{ state.from=dFrom.value; refresh(); };
+  dTo.onchange=()=>{ state.to=dTo.value; refresh(); };
+  dMonth.onchange=()=>{ state.month=dMonth.value; refresh(); };
+  yearSel.onchange=()=>{ state.year=+yearSel.value; refresh(); };
+  showFields();
+}
+function updateRangeTag(){
+  const {rows,a,b}=filtered();
+  document.getElementById('rangeTag').innerHTML=
+    `<b>${fmtDateBR(a)}</b> — <b>${fmtDateBR(b)}</b> · ${nf0.format(rows.length)} dias`;
+}
+
+// ---------- toggles ----------
+function setupToggles(){
+  const ma=document.getElementById('tgMA'), tr=document.getElementById('tgTR');
+  const sync=()=>{ ma.classList.toggle('on',state.showMA); tr.classList.toggle('on',state.showTR); };
+  ma.onclick=()=>{ state.showMA=!state.showMA; sync(); draw(); };
+  tr.onclick=()=>{ state.showTR=!state.showTR; sync(); draw(); };
+  sync();
+}
+
+// ---------- live data (Google Sheets CSV) ----------
+function parseCSV(text){
+  const rows=[]; let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else { if(c==='"') q=true;
+      else if(c===','){ row.push(f); f=''; }
+      else if(c==='\n'){ row.push(f); rows.push(row); row=[]; f=''; }
+      else if(c==='\r'){}
+      else f+=c; } }
+  if(f.length||row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+function numBR(s){
+  if(s==null) return null;
+  s=String(s).trim();
+  if(s===''||s==='N/A'||s==='NA'||s==='-') return null;
+  s=s.replace(/[R$\s\u00A0%]/g,'').replace(/\./g,'').replace(',','.');
+  const v=parseFloat(s); return isNaN(v)?null:v;
+}
+function pctBR(s){ const v=numBR(s); return v==null?null:v/100; }
+function dateBR(s){
+  const m=String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(!m) return null;
+  let y=m[3]; y=y.length===2?2000+(+y):+y;
+  return y+'-'+String(+m[2]).padStart(2,'0')+'-'+String(+m[1]).padStart(2,'0');
+}
+function parseSheet(text){
+  const t=parseCSV(text);
+  if(!t.length) throw new Error('CSV vazio');
+  const head=t[0].map(h=>h.trim());
+  const ix=n=>head.indexOf(n);
+  const cols={d:ix('Data'),aval:ix('Avaliados'),agTot:ix('Agendamentos Totais para o dia'),
+    agFeito:ix('Total de Agendamentos no dia'),cTot:ix('% Comparecimentos Totais'),cVal:ix('% Comparecimentos Válidos')};
+  for(const k in cols) if(cols[k]<0) throw new Error('coluna não encontrada: '+k);
+  const out=[];
+  for(let r=1;r<t.length;r++){
+    const row=t[r]; if(!row||row[cols.d]==null) continue;
+    const d=dateBR(row[cols.d]); if(!d) continue;
+    out.push({d,aval:numBR(row[cols.aval]),agTot:numBR(row[cols.agTot]),
+      agFeito:numBR(row[cols.agFeito]),cTot:pctBR(row[cols.cTot]),cVal:pctBR(row[cols.cVal])});
+  }
+  return out;
+}
+function clampState(){
+  const lo=DATA[0].d, hi=DATA[DATA.length-1].d;
+  if(!state.from||state.from<lo||state.from>hi) state.from=lo;
+  if(!state.to||state.to>hi||state.to<lo) state.to=hi;
+  if(YEARS.indexOf(state.year)<0) state.year=YEARS[YEARS.length-1];
+  const months=new Set(DATA.map(r=>r.d.slice(0,7)));
+  if(!months.has(state.month)) state.month=hi.slice(0,7);
+}
+function bootData(rows){
+  const clean=rows.map(r=>({...r,dt:new Date(r.d+'T00:00:00')})).filter(r=>!isNaN(r.dt));
+  if(clean.length<2) throw new Error('poucos dados');
+  clean.sort((a,b)=>a.dt-b.dt);
+  DATA=clean; MIN_DT=DATA[0].dt; MAX_DT=DATA[DATA.length-1].dt;
+  YEARS=[...new Set(DATA.map(r=>r.dt.getFullYear()))].sort((a,b)=>a-b);
+  clampState(); refreshBounds();
+  renderKPIs(); syncMetric(); markActive(); updateRangeTag(); draw();
+}
+function setStatus(kind,lastD,msg){
+  const dot=document.getElementById('srcDot'), txt=document.getElementById('srcText'), btn=document.getElementById('btnRefresh');
+  dot.className='src-dot '+kind;
+  const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const upto=lastD?fmtDateBR(new Date(lastD+'T00:00:00')):'';
+  if(kind==='loading'){ txt.textContent='Atualizando dados…'; btn.disabled=true; }
+  else if(kind==='live'){ txt.innerHTML='Conectado à planilha · atualizado <b>'+now+'</b> (até '+upto+')'; btn.disabled=false; }
+  else { txt.innerHTML='Sem conexão com a planilha — usando dados locais (até '+upto+')'; btn.disabled=false; }
+}
+async function fetchLive(){
+  setStatus('loading');
+  try{
+    const res=await fetch(CSV_URL,{cache:'no-store',redirect:'follow'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=parseSheet(await res.text());
+    bootData(rows);
+    setStatus('live', DATA[DATA.length-1].d);
+  }catch(e){
+    if(!DATA.length) bootData(SNAPSHOT);            // first load failed → use snapshot
+    setStatus('local', DATA[DATA.length-1].d, e.message);
+  }
+}
+
+// ---------- init ----------
+renderMetricSegs();
+setupDateControls();
+setupToggles();
+bootData(SNAPSHOT);                                  // show embedded data immediately
+fetchLive();                                         // then try to pull the live sheet
+document.getElementById('btnRefresh').onclick=fetchLive;
+</script>
+</body>
+</html>
